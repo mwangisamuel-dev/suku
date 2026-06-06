@@ -14,9 +14,11 @@ dependencies:
   intl: ^0.19.0
   supabase_flutter: ^2.3.0
   shared_preferences: ^2.2.3
-  pin_code_fields: 9.4.0
+  local_auth: ^2.3.0
+  flutter_secure_storage: ^9.0.0
+  google_sign_in: ^6.2.0
 
-dev_dependencies:
+
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0

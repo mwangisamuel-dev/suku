@@ -75,11 +75,7 @@ class _PinLockScreenState extends State<PinLockScreen> {
         if (!mounted) return;
         await AuthService.signOut();
         if (!mounted) return;
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const PhoneScreen()),
-          (_) => false,
-        );
+        _goToPhoneScreen();
       }
     }
   }
@@ -88,6 +84,14 @@ class _PinLockScreenState extends State<PinLockScreen> {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const HomeScreen()),
+      (_) => false,
+    );
+  }
+
+  void _goToPhoneScreen() {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const PhoneScreen()),
       (_) => false,
     );
   }
@@ -195,11 +199,7 @@ class _PinLockScreenState extends State<PinLockScreen> {
                 onPressed: () async {
                   await AuthService.signOut();
                   if (!mounted) return;
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (_) => const PhoneScreen()),
-                    (_) => false,
-                  );
+                  _goToPhoneScreen();
                 },
                 child: Text(
                   'Sign in with different account',

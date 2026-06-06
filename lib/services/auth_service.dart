@@ -7,6 +7,7 @@ class AuthService {
   static User? get currentUser => _supabase.auth.currentUser;
   static bool get isLoggedIn => currentUser != null;
 
+  // ── Phone OTP ─────────────────────────────────────────────────
   static Future<AuthResult> sendOtp(String phone) async {
     try {
       await _supabase.auth.signInWithOtp(phone: phone);
@@ -25,9 +26,7 @@ class AuthService {
         token: token,
         type: OtpType.sms,
       );
-      if (res.user != null) {
-        return AuthResult.success();
-      }
+      if (res.user != null) return AuthResult.success();
       return AuthResult.error('Verification failed. Please try again.');
     } on AuthException catch (e) {
       return AuthResult.error(e.message);
@@ -36,6 +35,48 @@ class AuthService {
     }
   }
 
+  // ── Email ─────────────────────────────────────────────────────
+  static Future<AuthResult> signInWithEmail(
+      String email, String password) async {
+    try {
+      final res = await _supabase.auth.signInWithPassword(
+          email: email, password: password);
+      if (res.user != null) return AuthResult.success();
+      return AuthResult.error('Sign in failed. Please try again.');
+    } on AuthException catch (e) {
+      return AuthResult.error(e.message);
+    } catch (e) {
+      return AuthResult.error('Something went wrong. Please try again.');
+    }
+  }
+
+  static Future<AuthResult> signUpWithEmail(
+      String email, String password) async {
+    try {
+      final res = await _supabase.auth.signUp(
+          email: email, password: password);
+      if (res.user != null) return AuthResult.success();
+      return AuthResult.error('Sign up failed. Please try again.');
+    } on AuthException catch (e) {
+      return AuthResult.error(e.message);
+    } catch (e) {
+      return AuthResult.error('Something went wrong. Please try again.');
+    }
+  }
+
+  // ── Google ────────────────────────────────────────────────────
+  static Future<AuthResult> signInWithGoogle() async {
+    try {
+      await _supabase.auth.signInWithOAuth(OAuthProvider.google);
+      return AuthResult.success();
+    } on AuthException catch (e) {
+      return AuthResult.error(e.message);
+    } catch (e) {
+      return AuthResult.error('Google sign in failed. Please try again.');
+    }
+  }
+
+  // ── Profile ───────────────────────────────────────────────────
   static Future<void> saveBusinessProfile({
     required String businessName,
     required String location,
@@ -53,7 +94,7 @@ class AuthService {
           'created_at': DateTime.now().toIso8601String(),
         });
       } catch (e) {
-        // silently fail — local cache still works
+        // silently fail
       }
     }
     final prefs = await SharedPreferences.getInstance();
@@ -77,7 +118,7 @@ class AuthService {
     try {
       await _supabase.auth.signOut();
     } catch (e) {
-      // continue even if signout fails
+      // continue
     }
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();

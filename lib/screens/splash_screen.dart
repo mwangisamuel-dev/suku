@@ -10,6 +10,8 @@ import 'login_screen.dart';
 import 'pin_lock_screen.dart';
 import 'pin_setup_screen.dart';
 import 'home_screen.dart';
+import 'phone_screen.dart';
+
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -17,8 +19,7 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
-    with TickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMixin {
   late AnimationController _logoController;
   late AnimationController _textController;
   late AnimationController _taglineController;
@@ -111,8 +112,7 @@ class _SplashScreenState extends State<SplashScreen>
       PageRouteBuilder(
         pageBuilder: (_, __, ___) => nextScreen,
         transitionDuration: const Duration(milliseconds: 600),
-        transitionsBuilder: (_, anim, __, child) =>
-            FadeTransition(opacity: anim, child: child),
+        transitionsBuilder: (_, anim, __, child) => FadeTransition(opacity: anim, child: child),
       ),
     );
   }
@@ -140,14 +140,14 @@ class _SplashScreenState extends State<SplashScreen>
               child: Container(
                 width: size.width * 2 * _bgExpand.value,
                 height: size.width * 2 * _bgExpand.value,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
                       SukuColors.navyLight,
                       SukuColors.navy,
                     ],
-                    stops: const [0.0, 1.0],
+                    stops: [0.0, 1.0],
                   ),
                 ),
               ),

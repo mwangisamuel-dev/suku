@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../theme/suku_theme.dart';
 import '../services/pin_service.dart';
 import 'home_screen.dart';
+import '../widgets/keypad.dart';
 
 class PinSetupScreen extends StatefulWidget {
   const PinSetupScreen({super.key});
@@ -100,9 +101,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                _confirming
-                    ? 'Enter your PIN again to confirm'
-                    : 'This PIN protects your Suku account',
+                _confirming ? 'Enter your PIN again to confirm' : 'This PIN protects your Suku account',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 14,
                   color: Colors.white.withOpacity(0.6),
@@ -123,13 +122,9 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
                     height: 18,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: filled
-                          ? SukuColors.green
-                          : Colors.white.withOpacity(0.2),
+                      color: filled ? SukuColors.green : Colors.white.withOpacity(0.2),
                       border: Border.all(
-                        color: filled
-                            ? SukuColors.green
-                            : Colors.white.withOpacity(0.3),
+                        color: filled ? SukuColors.green : Colors.white.withOpacity(0.3),
                         width: 2,
                       ),
                     ),
@@ -141,16 +136,14 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
               if (_error != null) ...[
                 const SizedBox(height: 16),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
                     color: SukuColors.error.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     _error!,
-                    style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13, color: SukuColors.error),
+                    style: GoogleFonts.plusJakartaSans(fontSize: 13, color: SukuColors.error),
                   ),
                 ),
               ],
@@ -158,7 +151,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
               const Spacer(),
 
               // Keypad
-              _Keypad(onKey: _onKey, onDelete: _onDelete),
+              Keypad(onKey: _onKey, onDelete: _onDelete),
               const SizedBox(height: 20),
             ],
           ),

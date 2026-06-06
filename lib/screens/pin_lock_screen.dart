@@ -6,6 +6,7 @@ import '../services/pin_service.dart';
 import '../services/auth_service.dart';
 import 'home_screen.dart';
 import 'phone_screen.dart';
+import '../widgets/keypad.dart';
 
 class PinLockScreen extends StatefulWidget {
   const PinLockScreen({super.key});
@@ -66,9 +67,8 @@ class _PinLockScreenState extends State<PinLockScreen> {
       setState(() {
         _attempts++;
         _pin = '';
-        _error = _attempts >= 5
-            ? 'Too many attempts. Please sign in again.'
-            : 'Wrong PIN. ${5 - _attempts} attempts left.';
+        _error =
+            _attempts >= 5 ? 'Too many attempts. Please sign in again.' : 'Wrong PIN. ${5 - _attempts} attempts left.';
       });
       if (_attempts >= 5) {
         await Future.delayed(const Duration(seconds: 2));
@@ -101,8 +101,7 @@ class _PinLockScreenState extends State<PinLockScreen> {
           child: Column(
             children: [
               const SizedBox(height: 40),
-              Image.asset('assets/images/icon.png',
-                  width: 60, height: 60),
+              Image.asset('assets/images/icon.png', width: 60, height: 60),
               const SizedBox(height: 32),
               Text(
                 'Welcome back 👋',
@@ -135,13 +134,9 @@ class _PinLockScreenState extends State<PinLockScreen> {
                     height: 18,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: filled
-                          ? SukuColors.green
-                          : Colors.white.withOpacity(0.2),
+                      color: filled ? SukuColors.green : Colors.white.withOpacity(0.2),
                       border: Border.all(
-                        color: filled
-                            ? SukuColors.green
-                            : Colors.white.withOpacity(0.3),
+                        color: filled ? SukuColors.green : Colors.white.withOpacity(0.3),
                         width: 2,
                       ),
                     ),
@@ -152,16 +147,14 @@ class _PinLockScreenState extends State<PinLockScreen> {
               if (_error != null) ...[
                 const SizedBox(height: 16),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
                     color: SukuColors.error.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     _error!,
-                    style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13, color: SukuColors.error),
+                    style: GoogleFonts.plusJakartaSans(fontSize: 13, color: SukuColors.error),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -178,26 +171,22 @@ class _PinLockScreenState extends State<PinLockScreen> {
                     decoration: BoxDecoration(
                       color: SukuColors.green.withOpacity(0.15),
                       shape: BoxShape.circle,
-                      border: Border.all(
-                          color: SukuColors.green.withOpacity(0.3)),
+                      border: Border.all(color: SukuColors.green.withOpacity(0.3)),
                     ),
-                    child: const Icon(Icons.fingerprint_rounded,
-                        color: SukuColors.green, size: 36),
+                    child: const Icon(Icons.fingerprint_rounded, color: SukuColors.green, size: 36),
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Use fingerprint',
-                  style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13,
-                      color: SukuColors.green,
-                      fontWeight: FontWeight.w500),
+                  style:
+                      GoogleFonts.plusJakartaSans(fontSize: 13, color: SukuColors.green, fontWeight: FontWeight.w500),
                 ),
                 const SizedBox(height: 20),
               ],
 
               // Keypad
-              _Keypad(onKey: _onKey, onDelete: _onDelete),
+              Keypad(onKey: _onKey, onDelete: _onDelete),
               const SizedBox(height: 16),
 
               // Sign out option
@@ -207,17 +196,14 @@ class _PinLockScreenState extends State<PinLockScreen> {
                   if (!mounted) return;
                   Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(
-                        builder: (_) => const PhoneScreen()),
+                    MaterialPageRoute(builder: (_) => const PhoneScreen()),
                     (_) => false,
                   );
                 },
                 child: Text(
                   'Sign in with different account',
                   style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13,
-                      color: Colors.white.withOpacity(0.4),
-                      fontWeight: FontWeight.w500),
+                      fontSize: 13, color: Colors.white.withOpacity(0.4), fontWeight: FontWeight.w500),
                 ),
               ),
               const SizedBox(height: 8),

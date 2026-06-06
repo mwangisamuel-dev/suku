@@ -3,11 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/suku_theme.dart';
 
-class _Keypad extends StatelessWidget {
+class Keypad extends StatelessWidget {
   final Function(String) onKey;
   final VoidCallback onDelete;
 
-  const _Keypad({required this.onKey, required this.onDelete});
+  const Keypad({super.key, required this.onKey, required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -45,13 +45,11 @@ class _Keypad extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.08),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                          color: Colors.white.withOpacity(0.1)),
+                      border: Border.all(color: Colors.white.withOpacity(0.1)),
                     ),
                     child: Center(
                       child: key == 'del'
-                          ? const Icon(Icons.backspace_rounded,
-                              color: Colors.white, size: 22)
+                          ? const Icon(Icons.backspace_rounded, color: Colors.white, size: 22)
                           : Text(
                               key,
                               style: GoogleFonts.plusJakartaSans(

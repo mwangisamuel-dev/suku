@@ -6,7 +6,8 @@ import '../theme/suku_theme.dart';
 import '../services/auth_service.dart';
 import 'business_setup_screen.dart';
 import 'home_screen.dart';
-
+import '../services/pin_service.dart';
+import 'pin_setup_screen.dart';
 class OtpScreen extends StatefulWidget {
   final String phone;
   const OtpScreen({super.key, required this.phone});
@@ -72,20 +73,27 @@ class _OtpScreenState extends State<OtpScreen>
     if (!mounted) return;
     setState(() => _loading = false);
 
-    if (result.success) {
-      HapticFeedback.lightImpact();
-      final profileComplete = await AuthService.isProfileComplete();
-      if (!mounted) return;
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(
-          builder: (_) => profileComplete
-              ? const HomeScreen()
-              : const BusinessSetupScreen(),
-        ),
-        (_) => false,
-      );
-    } else {
+       if (result.success) {
+  HapticFeedback.lightImpact();
+  final profileComplete = await AuthService.isProfileComplete();
+  final pinSet = await PinService.isPinSet();
+  if (!mounted) return;
+  if (!profileComplete) {
+    Navigator.pushAndRemoveUntil(context,
+        MaterialPageRoute(builder: (_) => const BusinessSetupScreen()),
+        (_) => false);
+  } else if (!pinSet) {
+    Navigator.pushAndRemoveUntil(context,
+        MaterialPageRoute(builder: (_) => const PinSetupScreen()),
+        (_) => false);
+  } else {
+    Navigator.pushAndRemoveUntil(context,
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        (_) => false);
+  }
+}    
+
+ else {
       HapticFeedback.vibrate();
       setState(() => _error = result.error ?? 'Invalid code. Try again.');
       for (final c in _controllers) c.clear();

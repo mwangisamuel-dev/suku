@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../theme/suku_theme.dart';
 import '../services/auth_service.dart';
 import 'home_screen.dart';
+import 'pin_setup_screen.dart';
 
 class BusinessSetupScreen extends StatefulWidget {
   const BusinessSetupScreen({super.key});
@@ -48,19 +49,19 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
   }
 
   Future<void> _finish() async {
-    setState(() => _loading = true);
-    await AuthService.saveBusinessProfile(
-      businessName: _nameController.text.trim(),
-      location: _locationController.text.trim(),
-      businessType: _selectedType ?? 'other',
-    );
-    if (!mounted) return;
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
-      (_) => false,
-    );
-  }
+  setState(() => _loading = true);
+  await AuthService.saveBusinessProfile(
+    businessName: _nameController.text.trim(),
+    location: _locationController.text.trim(),
+    businessType: _selectedType ?? 'other',
+  );
+  if (!mounted) return;
+  Navigator.pushAndRemoveUntil(
+    context,
+    MaterialPageRoute(builder: (_) => const PinSetupScreen()),
+    (_) => false,
+  );
+}
 
   @override
   Widget build(BuildContext context) {

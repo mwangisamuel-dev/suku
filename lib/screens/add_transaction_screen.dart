@@ -3,14 +3,15 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/suku_theme.dart';
 import '../models/models.dart';
-import '../widgets/shared_widgets.dart';
+import '../services/transaction_service.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   final TransactionType? initialType;
   const AddTransactionScreen({super.key, this.initialType});
 
   @override
-  State<AddTransactionScreen> createState() => _AddTransactionScreenState();
+  State<AddTransactionScreen> createState() =>
+      _AddTransactionScreenState();
 }
 
 class _AddTransactionScreenState extends State<AddTransactionScreen>
@@ -20,6 +21,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
   final _amountCtrl = TextEditingController();
   final _titleCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
+  bool _loading = false;
   late AnimationController _slideCtrl;
   late Animation<Offset> _slideAnim;
 
@@ -31,7 +33,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
         vsync: this, duration: const Duration(milliseconds: 350));
     _slideAnim = Tween<Offset>(
             begin: const Offset(0, 0.08), end: Offset.zero)
-        .animate(CurvedAnimation(parent: _slideCtrl, curve: Curves.easeOut));
+        .animate(
+            CurvedAnimation(parent: _slideCtrl, curve: Curves.easeOut));
     _slideCtrl.forward();
   }
 
@@ -49,28 +52,60 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
       _titleCtrl.text.isNotEmpty &&
       (_type == TransactionType.income || _category != null);
 
-  void _save() {
+  Future<void> _save() async {
     if (!_isValid) return;
+    setState(() => _loading = true);
     HapticFeedback.mediumImpact();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
-            const SizedBox(width: 8),
-            Text('Transaction saved! Imeingizwa.',
-                style: GoogleFonts.plusJakartaSans(
-                    fontWeight: FontWeight.w600, color: Colors.white)),
-          ],
-        ),
-        backgroundColor: SukuColors.green,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
-      ),
+
+    final success = await TransactionService.addTransaction(
+      title: _titleCtrl.text.trim(),
+      amount: double.tryParse(_amountCtrl.text) ?? 0,
+      type: _type,
+      category: _category,
+      notes: _notesCtrl.text.trim().isEmpty
+          ? null
+          : _notesCtrl.text.trim(),
     );
-    Future.delayed(const Duration(milliseconds: 800),
-        () => Navigator.of(context).pop());
+
+    if (!mounted) return;
+    setState(() => _loading = false);
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle_rounded,
+                  color: Colors.white, size: 18),
+              const SizedBox(width: 8),
+              Text('Transaction saved!',
+                  style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white)),
+            ],
+          ),
+          backgroundColor: SukuColors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+      Navigator.of(context).pop(true);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to save. Please try again.',
+              style: GoogleFonts.plusJakartaSans(
+                  color: Colors.white)),
+          backgroundColor: SukuColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+    }
   }
 
   @override
@@ -91,12 +126,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
                 fontSize: 18, fontWeight: FontWeight.w700)),
         actions: [
           TextButton(
-            onPressed: _isValid ? _save : null,
+            onPressed: _isValid && !_loading ? _save : null,
             child: Text('Save',
                 style: GoogleFonts.plusJakartaSans(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: _isValid ? SukuColors.green : SukuColors.textHint)),
+                    color: _isValid
+                        ? SukuColors.green
+                        : SukuColors.textHint)),
           ),
         ],
       ),
@@ -130,15 +167,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
                       label: '↓ Money Out',
                       active: !isIncome,
                       activeColor: SukuColors.error,
-                      onTap: () =>
-                          setState(() => _type = TransactionType.expense),
+                      onTap: () => setState(
+                          () => _type = TransactionType.expense),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 24),
 
-              // Amount field — big and prominent
+              // Amount
               Center(
                 child: Column(
                   children: [
@@ -151,13 +188,16 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
                     IntrinsicWidth(
                       child: TextField(
                         controller: _amountCtrl,
-                        keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true),
+                        keyboardType:
+                            const TextInputType.numberWithOptions(
+                                decimal: true),
                         textAlign: TextAlign.center,
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 40,
                           fontWeight: FontWeight.w800,
-                          color: isIncome ? SukuColors.green : SukuColors.error,
+                          color: isIncome
+                              ? SukuColors.green
+                              : SukuColors.error,
                           letterSpacing: -1,
                         ),
                         decoration: InputDecoration(
@@ -173,7 +213,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
                           prefixStyle: GoogleFonts.plusJakartaSans(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
-                            color: (isIncome ? SukuColors.green : SukuColors.error)
+                            color: (isIncome
+                                    ? SukuColors.green
+                                    : SukuColors.error)
                                 .withOpacity(0.6),
                           ),
                         ),
@@ -190,7 +232,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
 
               // Title
               _Field(
-                label: isIncome ? 'Source / Description' : 'What did you pay for?',
+                label: isIncome
+                    ? 'Source / Description'
+                    : 'What did you pay for?',
                 hint: isIncome
                     ? 'e.g. Morning sales, Customer payment'
                     : 'e.g. Unga wholesale, Staff wages',
@@ -199,7 +243,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
               ),
               const SizedBox(height: 16),
 
-              // Category (expense only)
+              // Category
               if (!isIncome) ...[
                 Text('Category',
                     style: GoogleFonts.plusJakartaSans(
@@ -213,7 +257,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
                   children: ExpenseCategory.values.map((cat) {
                     final active = _category == cat;
                     return GestureDetector(
-                      onTap: () => setState(() => _category = cat),
+                      onTap: () =>
+                          setState(() => _category = cat),
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
                         padding: const EdgeInsets.symmetric(
@@ -240,7 +285,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
                                     : SukuColors.textSecondary),
                             const SizedBox(width: 6),
                             Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.start,
                               children: [
                                 Text(cat.label,
                                     style: GoogleFonts.plusJakartaSans(
@@ -276,15 +322,17 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
               const SizedBox(height: 32),
 
               // Save button
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
+              SizedBox(
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: _isValid ? _save : null,
+                  onPressed:
+                      _isValid && !_loading ? _save : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _isValid
-                        ? (isIncome ? SukuColors.green : SukuColors.navy)
+                        ? (isIncome
+                            ? SukuColors.green
+                            : SukuColors.navy)
                         : SukuColors.border,
                     foregroundColor: Colors.white,
                     elevation: 0,
@@ -293,9 +341,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen>
                     textStyle: GoogleFonts.plusJakartaSans(
                         fontSize: 16, fontWeight: FontWeight.w700),
                   ),
-                  child: Text(_isValid
-                      ? 'Hifadhi — Save Transaction'
-                      : 'Fill all fields to save'),
+                  child: _loading
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2.5))
+                      : Text(_isValid
+                          ? 'Hifadhi — Save Transaction'
+                          : 'Fill all fields to save'),
                 ),
               ),
               const SizedBox(height: 40),
@@ -328,7 +382,9 @@ class _TypeTab extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: active ? activeColor.withOpacity(0.12) : Colors.transparent,
+            color: active
+                ? activeColor.withOpacity(0.12)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
           ),
           child: Text(
@@ -383,8 +439,8 @@ class _Field extends StatelessWidget {
                 fontSize: 14, color: SukuColors.textHint),
             filled: true,
             fillColor: SukuColors.surface,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16, vertical: 14),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
               borderSide: const BorderSide(color: SukuColors.border),
@@ -395,8 +451,8 @@ class _Field extends StatelessWidget {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide:
-                  const BorderSide(color: SukuColors.green, width: 1.5),
+              borderSide: const BorderSide(
+                  color: SukuColors.green, width: 1.5),
             ),
           ),
         ),

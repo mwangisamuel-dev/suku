@@ -1,29 +1,39 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  // ── Demo mode — no Supabase needed ──────────────────────────
-  // Any phone number works, OTP is always 123456
+  static final _supabase = Supabase.instance.client;
 
-  static bool get isLoggedIn {
-    // We use a simple flag stored in memory for demo
-    return _loggedIn;
-  }
-
-  static bool _loggedIn = false;
+  static User? get currentUser => _supabase.auth.currentUser;
+  static bool get isLoggedIn => currentUser != null;
 
   static Future<AuthResult> sendOtp(String phone) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(seconds: 1));
-    return AuthResult.success();
+    try {
+      await _supabase.auth.signInWithOtp(phone: phone);
+      return AuthResult.success();
+    } on AuthException catch (e) {
+      return AuthResult.error(e.message);
+    } catch (e) {
+      return AuthResult.error('Something went wrong. Please try again.');
+    }
   }
 
   static Future<AuthResult> verifyOtp(String phone, String token) async {
-    await Future.delayed(const Duration(seconds: 1));
-    if (token == '123456') {
-      _loggedIn = true;
-      return AuthResult.success();
+    try {
+      final res = await _supabase.auth.verifyOTP(
+        phone: phone,
+        token: token,
+        type: OtpType.sms,
+      );
+      if (res.user != null) {
+        return AuthResult.success();
+      }
+      return AuthResult.error('Verification failed. Please try again.');
+    } on AuthException catch (e) {
+      return AuthResult.error(e.message);
+    } catch (e) {
+      return AuthResult.error('Something went wrong. Please try again.');
     }
-    return AuthResult.error('Wrong code. Use 123456 for demo.');
   }
 
   static Future<void> saveBusinessProfile({
@@ -31,6 +41,21 @@ class AuthService {
     required String location,
     required String businessType,
   }) async {
+    final user = currentUser;
+    if (user != null) {
+      try {
+        await _supabase.from('profiles').upsert({
+          'id': user.id,
+          'phone': user.phone,
+          'business_name': businessName,
+          'location': location,
+          'business_type': businessType,
+          'created_at': DateTime.now().toIso8601String(),
+        });
+      } catch (e) {
+        // silently fail — local cache still works
+      }
+    }
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('business_name', businessName);
     await prefs.setString('location', location);
@@ -49,7 +74,11 @@ class AuthService {
   }
 
   static Future<void> signOut() async {
-    _loggedIn = false;
+    try {
+      await _supabase.auth.signOut();
+    } catch (e) {
+      // continue even if signout fails
+    }
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
   }

@@ -74,6 +74,7 @@ class _PinLockScreenState extends State<PinLockScreen> {
         await Future.delayed(const Duration(seconds: 2));
         if (!mounted) return;
         await AuthService.signOut();
+        if (!mounted) return;
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => const PhoneScreen()),

@@ -416,8 +416,13 @@ class _DashboardTab extends StatelessWidget {
                   delegate: SliverChildBuilderDelegate(
                     (_, i) => TransactionTile(
                       transaction: transactions[i],
-                      onTap: () => Navigator.push(context,
-                          MaterialPageRoute(builder: (_) => TransactionDetailScreen(transaction: transactions[i]))),
+                      onTap: () async {
+                        final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => TransactionDetailScreen(transaction: transactions[i])));
+                        if (result == true) onRefresh();
+                      },
                     ),
                     childCount: transactions.length > 5 ? 5 : transactions.length,
                   ),
@@ -946,8 +951,13 @@ class _TransactionsTabState extends State<_TransactionsTab> {
                   delegate: SliverChildBuilderDelegate(
                     (_, i) => TransactionTile(
                       transaction: filtered[i],
-                      onTap: () => Navigator.push(context,
-                          MaterialPageRoute(builder: (_) => TransactionDetailScreen(transaction: filtered[i]))),
+                      onTap: () async {
+                        final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => TransactionDetailScreen(transaction: filtered[i])));
+                        if (result == true) onRefresh();
+                      },
                     ),
                     childCount: filtered.length,
                   ),

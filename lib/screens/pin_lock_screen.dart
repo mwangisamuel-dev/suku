@@ -5,7 +5,7 @@ import '../theme/suku_theme.dart';
 import '../services/pin_service.dart';
 import '../services/auth_service.dart';
 import 'home_screen.dart';
-import 'phone_screen.dart';
+import 'welcome_screen.dart';
 import '../widgets/keypad.dart';
 
 class PinLockScreen extends StatefulWidget {
@@ -74,8 +74,11 @@ class _PinLockScreenState extends State<PinLockScreen> {
         await Future.delayed(const Duration(seconds: 2));
         if (!mounted) return;
         await AuthService.signOut();
-        if (!mounted) return;
-        _goToPhoneScreen();
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+          (_) => false,
+        );
       }
     }
   }
@@ -88,21 +91,13 @@ class _PinLockScreenState extends State<PinLockScreen> {
     );
   }
 
-  void _goToPhoneScreen() {
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const PhoneScreen()),
-      (_) => false,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: SukuColors.navy,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.symmetric(horizontal: 28),
           child: Column(
             children: [
               const SizedBox(height: 40),
@@ -126,20 +121,18 @@ class _PinLockScreenState extends State<PinLockScreen> {
                 ),
               ),
               const SizedBox(height: 48),
-
-              // PIN dots
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(4, (i) {
                   final filled = i < _pin.length;
                   return AnimatedContainer(
                     duration: const Duration(milliseconds: 150),
-                    margin: const EdgeInsets.symmetric(horizontal: 10),
-                    width: 18,
-                    height: 18,
+                    margin: const EdgeInsets.symmetric(horizontal: 12),
+                    width: 20,
+                    height: 20,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: filled ? SukuColors.green : Colors.white.withOpacity(0.2),
+                      color: filled ? SukuColors.green : Colors.transparent,
                       border: Border.all(
                         color: filled ? SukuColors.green : Colors.white.withOpacity(0.3),
                         width: 2,
@@ -148,26 +141,20 @@ class _PinLockScreenState extends State<PinLockScreen> {
                   );
                 }),
               ),
-
               if (_error != null) ...[
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
                     color: SukuColors.error.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text(
-                    _error!,
-                    style: GoogleFonts.plusJakartaSans(fontSize: 13, color: SukuColors.error),
-                    textAlign: TextAlign.center,
-                  ),
+                  child: Text(_error!,
+                      style: GoogleFonts.plusJakartaSans(fontSize: 13, color: SukuColors.error),
+                      textAlign: TextAlign.center),
                 ),
               ],
-
               const Spacer(),
-
-              // Fingerprint button
               if (_biometricsAvailable) ...[
                 GestureDetector(
                   onTap: _tryBiometrics,
@@ -182,24 +169,23 @@ class _PinLockScreenState extends State<PinLockScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  'Use fingerprint',
-                  style:
-                      GoogleFonts.plusJakartaSans(fontSize: 13, color: SukuColors.green, fontWeight: FontWeight.w500),
-                ),
+                Text('Use fingerprint',
+                    style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13, color: SukuColors.green, fontWeight: FontWeight.w500)),
                 const SizedBox(height: 20),
               ],
-
-              // Keypad
               Keypad(onKey: _onKey, onDelete: _onDelete),
               const SizedBox(height: 16),
-
-              // Sign out option
               TextButton(
                 onPressed: () async {
                   await AuthService.signOut();
+                  await PinService.clearPin();
                   if (!mounted) return;
-                  _goToPhoneScreen();
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+                    (_) => false,
+                  );
                 },
                 child: Text(
                   'Sign in with different account',
@@ -207,7 +193,7 @@ class _PinLockScreenState extends State<PinLockScreen> {
                       fontSize: 13, color: Colors.white.withOpacity(0.4), fontWeight: FontWeight.w500),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
             ],
           ),
         ),

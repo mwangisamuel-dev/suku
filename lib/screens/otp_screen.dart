@@ -4,10 +4,11 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/suku_theme.dart';
 import '../services/auth_service.dart';
+import '../services/pin_service.dart';
 import 'business_setup_screen.dart';
 import 'home_screen.dart';
-import '../services/pin_service.dart';
 import 'pin_setup_screen.dart';
+
 class OtpScreen extends StatefulWidget {
   final String phone;
   const OtpScreen({super.key, required this.phone});
@@ -20,7 +21,8 @@ class _OtpScreenState extends State<OtpScreen>
     with SingleTickerProviderStateMixin {
   final List<TextEditingController> _controllers =
       List.generate(6, (_) => TextEditingController());
-  final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
+  final List<FocusNode> _focusNodes =
+      List.generate(6, (_) => FocusNode());
   bool _loading = false;
   String? _error;
   int _resendSeconds = 30;
@@ -37,6 +39,9 @@ class _OtpScreenState extends State<OtpScreen>
         CurvedAnimation(parent: _animController, curve: Curves.easeOut);
     _animController.forward();
     _startResendTimer();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusNodes[0].requestFocus();
+    });
   }
 
   void _startResendTimer() {
@@ -60,42 +65,49 @@ class _OtpScreenState extends State<OtpScreen>
     super.dispose();
   }
 
-  String get _otp =>
-      _controllers.map((c) => c.text).join();
+  String get _otp => _controllers.map((c) => c.text).join();
 
   Future<void> _verify() async {
     final otp = _otp;
     if (otp.length < 6) return;
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
 
     final result = await AuthService.verifyOtp(widget.phone, otp);
 
     if (!mounted) return;
     setState(() => _loading = false);
 
-       if (result.success) {
-  HapticFeedback.lightImpact();
-  final profileComplete = await AuthService.isProfileComplete();
-  final pinSet = await PinService.isPinSet();
-  if (!mounted) return;
-  if (!profileComplete) {
-    Navigator.pushAndRemoveUntil(context,
-        MaterialPageRoute(builder: (_) => const BusinessSetupScreen()),
-        (_) => false);
-  } else if (!pinSet) {
-    Navigator.pushAndRemoveUntil(context,
-        MaterialPageRoute(builder: (_) => const PinSetupScreen()),
-        (_) => false);
-  } else {
-    Navigator.pushAndRemoveUntil(context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-        (_) => false);
-  }
-}    
+    if (result.success) {
+      HapticFeedback.lightImpact();
+      final profileComplete = await AuthService.isProfileComplete();
+      final pinSet = await PinService.isPinSet();
+      if (!mounted) return;
 
- else {
+      if (!profileComplete) {
+        Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+                builder: (_) => const BusinessSetupScreen()),
+            (_) => false);
+      } else if (!pinSet) {
+        Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+                builder: (_) => const PinSetupScreen()),
+            (_) => false);
+      } else {
+        Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const HomeScreen()),
+            (_) => false);
+      }
+    } else {
       HapticFeedback.vibrate();
-      setState(() => _error = result.error ?? 'Invalid code. Try again.');
+      setState(() =>
+          _error = result.error ?? 'Invalid code. Try again.');
       for (final c in _controllers) c.clear();
       _focusNodes[0].requestFocus();
     }
@@ -114,7 +126,8 @@ class _OtpScreenState extends State<OtpScreen>
                   color: Colors.white, fontWeight: FontWeight.w600)),
           backgroundColor: SukuColors.green,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12)),
           margin: const EdgeInsets.all(16),
         ));
       }
@@ -153,7 +166,8 @@ class _OtpScreenState extends State<OtpScreen>
                   decoration: BoxDecoration(
                     color: SukuColors.greenSurface,
                     borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: SukuColors.green.withOpacity(0.2)),
+                    border: Border.all(
+                        color: SukuColors.green.withOpacity(0.2)),
                   ),
                   child: const Icon(Icons.sms_rounded,
                       color: SukuColors.green, size: 28),
@@ -173,7 +187,8 @@ class _OtpScreenState extends State<OtpScreen>
                         color: SukuColors.textSecondary,
                         height: 1.6),
                     children: [
-                      const TextSpan(text: 'We sent a 6-digit code to '),
+                      const TextSpan(
+                          text: 'We sent a 6-digit code to '),
                       TextSpan(
                         text: _maskedPhone,
                         style: GoogleFonts.plusJakartaSans(
@@ -184,29 +199,30 @@ class _OtpScreenState extends State<OtpScreen>
                   ),
                 ),
                 const SizedBox(height: 36),
-
-                // OTP boxes — custom built, no package needed
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: List.generate(6, (i) => _OtpBox(
-                    controller: _controllers[i],
-                    focusNode: _focusNodes[i],
-                    onChanged: (val) {
-                      setState(() => _error = null);
-                      if (val.isNotEmpty && i < 5) {
-                        _focusNodes[i + 1].requestFocus();
-                      }
-                      if (val.isNotEmpty && i == 5) {
-                        _focusNodes[i].unfocus();
-                        _verify();
-                      }
-                    },
-                    onBackspace: () {
-                      if (i > 0) _focusNodes[i - 1].requestFocus();
-                    },
-                  )),
+                  children: List.generate(
+                      6,
+                      (i) => _OtpBox(
+                            controller: _controllers[i],
+                            focusNode: _focusNodes[i],
+                            onChanged: (val) {
+                              setState(() => _error = null);
+                              if (val.isNotEmpty && i < 5) {
+                                _focusNodes[i + 1].requestFocus();
+                              }
+                              if (val.isNotEmpty && i == 5) {
+                                _focusNodes[i].unfocus();
+                                _verify();
+                              }
+                            },
+                            onBackspace: () {
+                              if (i > 0) {
+                                _focusNodes[i - 1].requestFocus();
+                              }
+                            },
+                          )),
                 ),
-
                 if (_error != null) ...[
                   const SizedBox(height: 12),
                   Container(
@@ -215,7 +231,8 @@ class _OtpScreenState extends State<OtpScreen>
                     decoration: BoxDecoration(
                       color: SukuColors.error.withOpacity(0.08),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: SukuColors.error.withOpacity(0.2)),
+                      border: Border.all(
+                          color: SukuColors.error.withOpacity(0.2)),
                     ),
                     child: Row(
                       children: [
@@ -225,14 +242,14 @@ class _OtpScreenState extends State<OtpScreen>
                         Expanded(
                           child: Text(_error!,
                               style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 13, color: SukuColors.error)),
+                                  fontSize: 13,
+                                  color: SukuColors.error)),
                         ),
                       ],
                     ),
                   ),
                 ],
                 const SizedBox(height: 24),
-
                 SizedBox(
                   width: double.infinity,
                   height: 56,
@@ -254,21 +271,23 @@ class _OtpScreenState extends State<OtpScreen>
                                 color: Colors.white, strokeWidth: 2.5))
                         : Text('Thibitisha — Verify',
                             style: GoogleFonts.plusJakartaSans(
-                                fontSize: 16, fontWeight: FontWeight.w700)),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700)),
                   ),
                 ),
                 const SizedBox(height: 20),
-
                 Center(
                   child: GestureDetector(
                     onTap: _resendOtp,
                     child: RichText(
                       text: TextSpan(
-                        style: GoogleFonts.plusJakartaSans(fontSize: 14),
+                        style:
+                            GoogleFonts.plusJakartaSans(fontSize: 14),
                         children: [
                           TextSpan(
                             text: "Didn't receive it? ",
-                            style: TextStyle(color: SukuColors.textSecondary),
+                            style: TextStyle(
+                                color: SukuColors.textSecondary),
                           ),
                           TextSpan(
                             text: _resendSeconds > 0
@@ -348,8 +367,8 @@ class _OtpBox extends StatelessWidget {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide:
-                  const BorderSide(color: SukuColors.green, width: 1.5),
+              borderSide: const BorderSide(
+                  color: SukuColors.green, width: 1.5),
             ),
           ),
           onChanged: onChanged,

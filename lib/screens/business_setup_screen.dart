@@ -8,7 +8,8 @@ class BusinessSetupScreen extends StatefulWidget {
   const BusinessSetupScreen({super.key});
 
   @override
-  State<BusinessSetupScreen> createState() => _BusinessSetupScreenState();
+  State<BusinessSetupScreen> createState() =>
+      _BusinessSetupScreenState();
 }
 
 class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
@@ -73,7 +74,6 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 12),
-              // Progress bar
               Row(
                 children: List.generate(3, (i) {
                   return Expanded(
@@ -81,7 +81,9 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
                       margin: EdgeInsets.only(right: i < 2 ? 6 : 0),
                       height: 4,
                       decoration: BoxDecoration(
-                        color: i <= _step ? SukuColors.green : SukuColors.border,
+                        color: i <= _step
+                            ? SukuColors.green
+                            : SukuColors.border,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -89,22 +91,18 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
                 }),
               ),
               const SizedBox(height: 8),
-              Text(
-                'Step ${_step + 1} of 3',
-                style:
-                    GoogleFonts.plusJakartaSans(fontSize: 12, color: SukuColors.textHint, fontWeight: FontWeight.w500),
-              ),
+              Text('Step ${_step + 1} of 3',
+                  style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      color: SukuColors.textHint,
+                      fontWeight: FontWeight.w500)),
               const SizedBox(height: 28),
-
-              // Step content
               Expanded(
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
                   child: _buildStep(),
                 ),
               ),
-
-              // Navigation buttons
               Row(
                 children: [
                   if (_step > 0)
@@ -113,11 +111,16 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
                         onPressed: () => setState(() => _step--),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: SukuColors.textSecondary,
-                          side: const BorderSide(color: SukuColors.border),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          side: const BorderSide(
+                              color: SukuColors.border),
+                          padding:
+                              const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
                         ),
-                        child: Text('Back', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
+                        child: Text('Back',
+                            style: GoogleFonts.plusJakartaSans(
+                                fontWeight: FontWeight.w600)),
                       ),
                     ),
                   if (_step > 0) const SizedBox(width: 12),
@@ -138,17 +141,24 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
                         disabledBackgroundColor: SukuColors.border,
                         foregroundColor: Colors.white,
                         elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
                       ),
                       child: _loading
                           ? const SizedBox(
                               width: 20,
                               height: 20,
-                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                              child: CircularProgressIndicator(
+                                  color: Colors.white, strokeWidth: 2.5))
                           : Text(
-                              _step == 2 ? 'Anza — Let\'s Go! 🚀' : 'Continue',
-                              style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w700),
+                              _step == 2
+                                  ? 'Anza — Let\'s Go! 🚀'
+                                  : 'Continue',
+                              style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700),
                             ),
                     ),
                   ),
@@ -188,20 +198,28 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
                 letterSpacing: -0.5,
                 height: 1.2)),
         const SizedBox(height: 8),
-        Text('This is how your reports and invoices will be labelled.',
-            style: GoogleFonts.plusJakartaSans(fontSize: 14, color: SukuColors.textSecondary, height: 1.6)),
+        Text('This is how your reports will be labelled.',
+            style: GoogleFonts.plusJakartaSans(
+                fontSize: 14,
+                color: SukuColors.textSecondary,
+                height: 1.6)),
         const SizedBox(height: 32),
         TextField(
           controller: _nameController,
           autofocus: true,
           textCapitalization: TextCapitalization.words,
-          style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w600, color: SukuColors.textPrimary),
+          style: GoogleFonts.plusJakartaSans(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: SukuColors.textPrimary),
           decoration: InputDecoration(
             hintText: 'e.g. Mama Mboga Shop, Kamau Hardware',
-            hintStyle: GoogleFonts.plusJakartaSans(fontSize: 16, color: SukuColors.textHint),
+            hintStyle: GoogleFonts.plusJakartaSans(
+                fontSize: 15, color: SukuColors.textHint),
             filled: true,
             fillColor: SukuColors.surface,
-            prefixIcon: const Icon(Icons.store_rounded, color: SukuColors.green),
+            prefixIcon: const Icon(Icons.store_rounded,
+                color: SukuColors.green),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: const BorderSide(color: SukuColors.border),
@@ -212,9 +230,11 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: SukuColors.green, width: 1.5),
+              borderSide: const BorderSide(
+                  color: SukuColors.green, width: 1.5),
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+            contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16, vertical: 18),
           ),
           onChanged: (_) => setState(() {}),
         ),
@@ -235,12 +255,16 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
                 letterSpacing: -0.5,
                 height: 1.2)),
         const SizedBox(height: 8),
-        Text('This helps Suku suggest the right expense categories.',
-            style: GoogleFonts.plusJakartaSans(fontSize: 14, color: SukuColors.textSecondary, height: 1.6)),
+        Text('Helps Suku suggest the right expense categories.',
+            style: GoogleFonts.plusJakartaSans(
+                fontSize: 14,
+                color: SukuColors.textSecondary,
+                height: 1.6)),
         const SizedBox(height: 20),
         Expanded(
           child: GridView.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            gridDelegate:
+                const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
@@ -251,28 +275,36 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
               final t = _businessTypes[i];
               final active = _selectedType == t['value'];
               return GestureDetector(
-                onTap: () => setState(() => _selectedType = t['value']),
+                onTap: () =>
+                    setState(() => _selectedType = t['value']),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   decoration: BoxDecoration(
-                    color: active ? SukuColors.greenSurface : SukuColors.surface,
+                    color: active
+                        ? SukuColors.greenSurface
+                        : SukuColors.surface,
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: active ? SukuColors.green : SukuColors.border,
+                      color: active
+                          ? SukuColors.green
+                          : SukuColors.border,
                       width: active ? 1.5 : 1,
                     ),
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(t['icon']!, style: const TextStyle(fontSize: 26)),
+                      Text(t['icon']!,
+                          style: const TextStyle(fontSize: 26)),
                       const SizedBox(height: 6),
                       Text(
                         t['label']!,
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
-                          color: active ? SukuColors.green : SukuColors.textSecondary,
+                          color: active
+                              ? SukuColors.green
+                              : SukuColors.textSecondary,
                         ),
                         textAlign: TextAlign.center,
                         maxLines: 2,
@@ -303,19 +335,27 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
                 height: 1.2)),
         const SizedBox(height: 8),
         Text('This appears on your PDF reports.',
-            style: GoogleFonts.plusJakartaSans(fontSize: 14, color: SukuColors.textSecondary, height: 1.6)),
+            style: GoogleFonts.plusJakartaSans(
+                fontSize: 14,
+                color: SukuColors.textSecondary,
+                height: 1.6)),
         const SizedBox(height: 32),
         TextField(
           controller: _locationController,
           autofocus: true,
           textCapitalization: TextCapitalization.words,
-          style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w600, color: SukuColors.textPrimary),
+          style: GoogleFonts.plusJakartaSans(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: SukuColors.textPrimary),
           decoration: InputDecoration(
             hintText: 'e.g. Gikomba, Westlands, Mombasa Rd',
-            hintStyle: GoogleFonts.plusJakartaSans(fontSize: 15, color: SukuColors.textHint),
+            hintStyle: GoogleFonts.plusJakartaSans(
+                fontSize: 15, color: SukuColors.textHint),
             filled: true,
             fillColor: SukuColors.surface,
-            prefixIcon: const Icon(Icons.location_on_rounded, color: SukuColors.orange),
+            prefixIcon: const Icon(Icons.location_on_rounded,
+                color: SukuColors.orange),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: const BorderSide(color: SukuColors.border),
@@ -326,21 +366,23 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: SukuColors.green, width: 1.5),
+              borderSide: const BorderSide(
+                  color: SukuColors.green, width: 1.5),
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+            contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16, vertical: 18),
           ),
           onChanged: (_) => setState(() {}),
         ),
         const SizedBox(height: 20),
-        // Summary card
         if (_nameController.text.isNotEmpty)
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: SukuColors.greenSurface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: SukuColors.green.withOpacity(0.2)),
+              border: Border.all(
+                  color: SukuColors.green.withOpacity(0.2)),
             ),
             child: Row(
               children: [
@@ -350,7 +392,8 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
                     color: SukuColors.green.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.check_circle_rounded, color: SukuColors.green, size: 22),
+                  child: const Icon(Icons.check_circle_rounded,
+                      color: SukuColors.green, size: 22),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -359,12 +402,17 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
                     children: [
                       Text(_nameController.text,
                           style: GoogleFonts.plusJakartaSans(
-                              fontSize: 15, fontWeight: FontWeight.w700, color: SukuColors.textPrimary)),
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: SukuColors.textPrimary)),
                       Text(
-                        _businessTypes.firstWhere((t) => t['value'] == _selectedType,
-                                orElse: () => {'label': ''})['label'] ??
+                        _businessTypes.firstWhere(
+                            (t) => t['value'] == _selectedType,
+                            orElse: () => {'label': ''})['label'] ??
                             '',
-                        style: GoogleFonts.plusJakartaSans(fontSize: 13, color: SukuColors.textSecondary),
+                        style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13,
+                            color: SukuColors.textSecondary),
                       ),
                     ],
                   ),

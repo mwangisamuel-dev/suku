@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/suku_theme.dart';
-import 'phone_screen.dart';
+import 'login_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -41,7 +41,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     _OnboardingPage(
       emoji: '📸',
       title: 'Snap. Done.\nBooks sorted.',
-      subtitle: 'Point your camera at any receipt and watch it vanish into your books instantly. No typing. No stress.',
+      subtitle:
+          'Point your camera at any receipt and watch it vanish into your books instantly. No typing. No stress.',
       swahili: 'Piga picha ya risiti — Suku inafanya kazi.',
       accent: SukuColors.green,
       bgGradient: [Color(0xFFE8F8EF), Color(0xFFF5F7FA)],
@@ -49,7 +50,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     _OnboardingPage(
       emoji: '📊',
       title: 'Know your\nnumbers daily.',
-      subtitle: 'See your Money In vs Money Out at a glance. No debits. No credits. Just clear business sense.',
+      subtitle:
+          'See your Money In vs Money Out at a glance. No debits. No credits. Just clear business sense.',
       swahili: 'Pesa inaingia. Pesa inatoka. Rahisi.',
       accent: SukuColors.navy,
       bgGradient: [Color(0xFFECF1F6), Color(0xFFF5F7FA)],
@@ -57,7 +59,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     _OnboardingPage(
       emoji: '🧾',
       title: 'Tax-ready in\none tap.',
-      subtitle: 'Generate a clean KRA-structured PDF report at the end of every month. Your accountant will love you.',
+      subtitle:
+          'Generate a clean KRA-structured PDF report at the end of every month. Your accountant will love you.',
       swahili: 'Ripoti ya KRA tayari — bila msongo wa mawazo.',
       accent: SukuColors.orange,
       bgGradient: [Color(0xFFFFF0EB), Color(0xFFF5F7FA)],
@@ -75,9 +78,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         vsync: this, duration: const Duration(milliseconds: 400));
     _fadeAnim =
         CurvedAnimation(parent: _animController, curve: Curves.easeOut);
-    _slideAnim = Tween<Offset>(
-            begin: const Offset(0, 0.15), end: Offset.zero)
-        .animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
+    _slideAnim =
+        Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero)
+            .animate(CurvedAnimation(
+                parent: _animController, curve: Curves.easeOut));
     _animController.forward();
   }
 
@@ -85,17 +89,19 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     if (_currentPage < _pages.length - 1) {
       _animController.reset();
       _pageController.nextPage(
-          duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut);
       _animController.forward();
     } else {
-      _goToHome();
+      _goToSignUp();
     }
   }
 
-  void _goToHome() {
-    Navigator.of(context).pushReplacement(
+  void _goToSignUp() {
+    Navigator.pushReplacement(
+      context,
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) => const PhoneScreen(),
+        pageBuilder: (_, __, ___) => const LoginScreen(isLogin: false),
         transitionDuration: const Duration(milliseconds: 500),
         transitionsBuilder: (_, anim, __, child) =>
             FadeTransition(opacity: anim, child: child),
@@ -113,8 +119,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   @override
   Widget build(BuildContext context) {
     final page = _pages[_currentPage];
-    final size = MediaQuery.of(context).size;
-
     return Scaffold(
       backgroundColor: SukuColors.background,
       body: AnimatedContainer(
@@ -129,30 +133,28 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         child: SafeArea(
           child: Column(
             children: [
-              // Top bar
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 24, vertical: 16),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Image.asset('assets/images/icon.png', width: 36, height: 36),
-                    if (_currentPage < _pages.length - 1)
-                      GestureDetector(
-                        onTap: _goToHome,
-                        child: Text(
-                          'Skip',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: SukuColors.textSecondary,
-                          ),
+                    Image.asset('assets/images/icon.png',
+                        width: 36, height: 36),
+                    GestureDetector(
+                      onTap: _goToSignUp,
+                      child: Text(
+                        'Skip',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: SukuColors.textSecondary,
                         ),
                       ),
+                    ),
                   ],
                 ),
               ),
-
-              // Page content
               Expanded(
                 child: PageView.builder(
                   controller: _pageController,
@@ -162,62 +164,61 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     _animController.forward();
                   },
                   itemCount: _pages.length,
-                  itemBuilder: (_, i) => _buildPage(_pages[i], size),
+                  itemBuilder: (_, i) =>
+                      _buildPage(_pages[i]),
                 ),
               ),
-
-              // Bottom area
               Padding(
                 padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
                 child: Column(
                   children: [
-                    // Page indicators
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(_pages.length, (i) {
                         final active = i == _currentPage;
                         return AnimatedContainer(
                           duration: const Duration(milliseconds: 300),
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          margin:
+                              const EdgeInsets.symmetric(horizontal: 4),
                           width: active ? 28 : 8,
                           height: 8,
                           decoration: BoxDecoration(
-                            color: active ? page.accent : page.accent.withOpacity(0.2),
+                            color: active
+                                ? page.accent
+                                : page.accent.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(4),
                           ),
                         );
                       }),
                     ),
                     const SizedBox(height: 28),
-                    // CTA Button
                     SizedBox(
                       width: double.infinity,
                       height: 56,
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        child: ElevatedButton(
-                          onPressed: _next,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: page.accent,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(18)),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                _currentPage == _pages.length - 1
-                                    ? 'Anza Sasa — Get Started'
-                                    : 'Continue',
-                                style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 16, fontWeight: FontWeight.w700),
-                              ),
-                              const SizedBox(width: 8),
-                              const Icon(Icons.arrow_forward_rounded, size: 20),
-                            ],
-                          ),
+                      child: ElevatedButton(
+                        onPressed: _next,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: page.accent,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              _currentPage == _pages.length - 1
+                                  ? 'Create Account'
+                                  : 'Continue',
+                              style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700),
+                            ),
+                            const SizedBox(width: 8),
+                            const Icon(Icons.arrow_forward_rounded,
+                                size: 20),
+                          ],
                         ),
                       ),
                     ),
@@ -231,7 +232,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     );
   }
 
-  Widget _buildPage(_OnboardingPage page, Size size) {
+  Widget _buildPage(_OnboardingPage page) {
     return FadeTransition(
       opacity: _fadeAnim,
       child: SlideTransition(
@@ -242,21 +243,21 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 20),
-              // Emoji in a styled container
               Container(
                 width: 90,
                 height: 90,
                 decoration: BoxDecoration(
                   color: page.accent.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(28),
-                  border: Border.all(color: page.accent.withOpacity(0.2), width: 1.5),
+                  border: Border.all(
+                      color: page.accent.withOpacity(0.2), width: 1.5),
                 ),
                 child: Center(
-                  child: Text(page.emoji, style: const TextStyle(fontSize: 42)),
+                  child: Text(page.emoji,
+                      style: const TextStyle(fontSize: 42)),
                 ),
               ),
               const SizedBox(height: 28),
-              // Title
               Text(
                 page.title,
                 style: GoogleFonts.plusJakartaSans(
@@ -268,7 +269,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 ),
               ),
               const SizedBox(height: 16),
-              // Subtitle
               Text(
                 page.subtitle,
                 style: GoogleFonts.plusJakartaSans(
@@ -279,13 +279,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 ),
               ),
               const SizedBox(height: 20),
-              // Swahili pill
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
                   color: page.accent.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: page.accent.withOpacity(0.2)),
+                  border:
+                      Border.all(color: page.accent.withOpacity(0.2)),
                 ),
                 child: Text(
                   '🇰🇪  ${page.swahili}',

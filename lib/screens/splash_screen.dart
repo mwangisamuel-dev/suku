@@ -4,9 +4,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/suku_theme.dart';
 import '../services/auth_service.dart';
-import 'onboarding_screen.dart';
+import '../services/pin_service.dart';
+import 'welcome_screen.dart';
+import 'pin_lock_screen.dart';
+import 'pin_setup_screen.dart';
 import 'home_screen.dart';
-import 'phone_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -15,12 +17,12 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with TickerProviderStateMixin {
   late AnimationController _logoController;
   late AnimationController _textController;
   late AnimationController _taglineController;
   late AnimationController _bgController;
-
   late Animation<double> _logoScale;
   late Animation<double> _logoOpacity;
   late Animation<double> _textOpacity;
@@ -31,46 +33,35 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   @override
   void initState() {
     super.initState();
-
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
     ));
-
     _bgController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-    _bgExpand = CurvedAnimation(parent: _bgController, curve: Curves.easeOut);
-
+        vsync: this, duration: const Duration(milliseconds: 800));
+    _bgExpand =
+        CurvedAnimation(parent: _bgController, curve: Curves.easeOut);
     _logoController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    );
+        vsync: this, duration: const Duration(milliseconds: 900));
     _logoScale = Tween<double>(begin: 0.3, end: 1.0).animate(
-      CurvedAnimation(parent: _logoController, curve: Curves.elasticOut),
-    );
+        CurvedAnimation(
+            parent: _logoController, curve: Curves.elasticOut));
     _logoOpacity = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _logoController, curve: const Interval(0, 0.4)),
-    );
-
+        CurvedAnimation(
+            parent: _logoController,
+            curve: const Interval(0, 0.4)));
     _textController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
+        vsync: this, duration: const Duration(milliseconds: 600));
     _textOpacity = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _textController, curve: Curves.easeOut),
-    );
-    _textSlide = Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
-      CurvedAnimation(parent: _textController, curve: Curves.easeOut),
-    );
-
+        CurvedAnimation(parent: _textController, curve: Curves.easeOut));
+    _textSlide =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero)
+            .animate(CurvedAnimation(
+                parent: _textController, curve: Curves.easeOut));
     _taglineController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-    _taglineOpacity = Tween<double>(begin: 0, end: 1).animate(_taglineController);
-
+        vsync: this, duration: const Duration(milliseconds: 500));
+    _taglineOpacity = Tween<double>(begin: 0, end: 1)
+        .animate(_taglineController);
     _runAnimations();
   }
 
@@ -86,21 +77,13 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     await Future.delayed(const Duration(milliseconds: 1400));
     if (!mounted) return;
 
-    // Decide where to go
     Widget nextScreen;
     if (AuthService.isLoggedIn) {
-      // Already logged in — go straight to dashboard
-      nextScreen = const HomeScreen();
+      final pinSet = await PinService.isPinSet();
+      nextScreen =
+          pinSet ? const PinLockScreen() : const PinSetupScreen();
     } else {
-      // Check if onboarding has been seen before
-      final prefs = await SharedPreferences.getInstance();
-      final seen = prefs.getBool('onboarding_seen') ?? false;
-      if (seen) {
-        nextScreen = const PhoneScreen();
-      } else {
-        await prefs.setBool('onboarding_seen', true);
-        nextScreen = const OnboardingScreen();
-      }
+      nextScreen = const WelcomeScreen();
     }
 
     if (!mounted) return;
@@ -108,7 +91,8 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       PageRouteBuilder(
         pageBuilder: (_, __, ___) => nextScreen,
         transitionDuration: const Duration(milliseconds: 600),
-        transitionsBuilder: (_, anim, __, child) => FadeTransition(opacity: anim, child: child),
+        transitionsBuilder: (_, anim, __, child) =>
+            FadeTransition(opacity: anim, child: child),
       ),
     );
   }
@@ -129,27 +113,22 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       backgroundColor: SukuColors.navy,
       body: Stack(
         children: [
-          // Animated background circle
           AnimatedBuilder(
             animation: _bgExpand,
             builder: (_, __) => Center(
               child: Container(
                 width: size.width * 2 * _bgExpand.value,
                 height: size.width * 2 * _bgExpand.value,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      SukuColors.navyLight,
-                      SukuColors.navy,
-                    ],
-                    stops: [0.0, 1.0],
-                  ),
+                  gradient: RadialGradient(colors: [
+                    SukuColors.navyLight,
+                    SukuColors.navy,
+                  ]),
                 ),
               ),
             ),
           ),
-          // Green glow
           Positioned(
             top: -80,
             right: -80,
@@ -162,36 +141,31 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                   height: 300,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [SukuColors.green.withOpacity(0.6), Colors.transparent],
-                    ),
+                    gradient: RadialGradient(colors: [
+                      SukuColors.green.withOpacity(0.6),
+                      Colors.transparent
+                    ]),
                   ),
                 ),
               ),
             ),
           ),
-          // Main content
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Logo
                 AnimatedBuilder(
                   animation: _logoController,
                   builder: (_, __) => Opacity(
                     opacity: _logoOpacity.value,
                     child: Transform.scale(
                       scale: _logoScale.value,
-                      child: Image.asset(
-                        'assets/images/icon.png',
-                        width: 110,
-                        height: 110,
-                      ),
+                      child: Image.asset('assets/images/icon.png',
+                          width: 110, height: 110),
                     ),
                   ),
                 ),
                 const SizedBox(height: 24),
-                // Brand name
                 AnimatedBuilder(
                   animation: _textController,
                   builder: (_, __) => FadeTransition(
@@ -211,15 +185,16 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                   ),
                 ),
                 const SizedBox(height: 8),
-                // Tagline
                 AnimatedBuilder(
                   animation: _taglineController,
                   builder: (_, __) => Opacity(
                     opacity: _taglineOpacity.value,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 7),
                       decoration: BoxDecoration(
-                        border: Border.all(color: SukuColors.green.withOpacity(0.4)),
+                        border: Border.all(
+                            color: SukuColors.green.withOpacity(0.4)),
                         borderRadius: BorderRadius.circular(20),
                         color: SukuColors.green.withOpacity(0.1),
                       ),
@@ -238,7 +213,6 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
               ],
             ),
           ),
-          // Bottom badge
           Positioned(
             bottom: 48,
             left: 0,

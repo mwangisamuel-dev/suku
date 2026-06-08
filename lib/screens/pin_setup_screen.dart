@@ -26,7 +26,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
         if (_pin.length < 4) {
           _pin += digit;
           if (_pin.length == 4) {
-            Future.delayed(const Duration(milliseconds: 200), () {
+            Future.delayed(const Duration(milliseconds: 300), () {
               if (mounted) setState(() => _confirming = true);
             });
           }
@@ -48,9 +48,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
       if (!_confirming) {
         if (_pin.isNotEmpty) _pin = _pin.substring(0, _pin.length - 1);
       } else {
-        if (_confirmPin.isNotEmpty) {
-          _confirmPin = _confirmPin.substring(0, _confirmPin.length - 1);
-        }
+        if (_confirmPin.isNotEmpty) _confirmPin = _confirmPin.substring(0, _confirmPin.length - 1);
       }
     });
   }
@@ -79,24 +77,27 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
   @override
   Widget build(BuildContext context) {
     final currentPin = _confirming ? _confirmPin : _pin;
-
     return Scaffold(
       backgroundColor: SukuColors.navy,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.symmetric(horizontal: 28),
           child: Column(
             children: [
               const SizedBox(height: 40),
               Image.asset('assets/images/icon.png', width: 60, height: 60),
               const SizedBox(height: 32),
-              Text(
-                _confirming ? 'Confirm your PIN' : 'Create a PIN',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                  letterSpacing: -0.5,
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: Text(
+                  _confirming ? 'Confirm your PIN' : 'Create a PIN',
+                  key: ValueKey(_confirming),
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: -0.5,
+                  ),
                 ),
               ),
               const SizedBox(height: 8),
@@ -109,20 +110,18 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 48),
-
-              // PIN dots
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(4, (i) {
                   final filled = i < currentPin.length;
                   return AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    margin: const EdgeInsets.symmetric(horizontal: 10),
-                    width: 18,
-                    height: 18,
+                    margin: const EdgeInsets.symmetric(horizontal: 12),
+                    width: 20,
+                    height: 20,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: filled ? SukuColors.green : Colors.white.withOpacity(0.2),
+                      color: filled ? SukuColors.green : Colors.transparent,
                       border: Border.all(
                         color: filled ? SukuColors.green : Colors.white.withOpacity(0.3),
                         width: 2,
@@ -131,28 +130,22 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
                   );
                 }),
               ),
-
-              // Error
               if (_error != null) ...[
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
                     color: SukuColors.error.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text(
-                    _error!,
-                    style: GoogleFonts.plusJakartaSans(fontSize: 13, color: SukuColors.error),
-                  ),
+                  child: Text(_error!,
+                      style: GoogleFonts.plusJakartaSans(fontSize: 13, color: SukuColors.error),
+                      textAlign: TextAlign.center),
                 ),
               ],
-
               const Spacer(),
-
-              // Keypad
               Keypad(onKey: _onKey, onDelete: _onDelete),
-              const SizedBox(height: 20),
+              const SizedBox(height: 32),
             ],
           ),
         ),

@@ -14,6 +14,7 @@ import 'add_transaction_screen.dart';
 import 'mpesa_screen.dart';
 import 'transaction_detail_screen.dart';
 import 'phone_screen.dart';
+import '../services/sms_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -48,6 +49,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _cardAnim = CurvedAnimation(parent: _cardController, curve: Curves.easeOutBack);
     _cardController.forward();
     _loadData();
+    _startSmsListener();
+  }
+
+  Future _startSmsListener() async {
+    await SmsService.startListening(
+      onTransaction: () {
+        // Refresh dashboard when new M-Pesa comes in
+        _loadData();
+      },
+    );
   }
 
   Future<void> _loadData() async {

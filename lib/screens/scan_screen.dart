@@ -18,8 +18,7 @@ class ScanScreen extends StatefulWidget {
 
 enum ScanState { idle, scanning, result, manual }
 
-class _ScanScreenState extends State<ScanScreen>
-    with TickerProviderStateMixin {
+class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   ScanState _state = ScanState.idle;
   File? _imageFile;
   late AnimationController _resultController;
@@ -45,14 +44,10 @@ class _ScanScreenState extends State<ScanScreen>
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
     ));
-    _resultController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 500));
-    _resultSlide =
-        Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
-            .animate(CurvedAnimation(
-                parent: _resultController, curve: Curves.easeOut));
-    _resultFade = CurvedAnimation(
-        parent: _resultController, curve: Curves.easeOut);
+    _resultController = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
+    _resultSlide = Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+        .animate(CurvedAnimation(parent: _resultController, curve: Curves.easeOut));
+    _resultFade = CurvedAnimation(parent: _resultController, curve: Curves.easeOut);
   }
 
   @override
@@ -66,8 +61,7 @@ class _ScanScreenState extends State<ScanScreen>
   // ── Pick image and scan ───────────────────────────────────────
   Future<void> _scan(ImageSource source) async {
     final picker = ImagePicker();
-    final picked =
-        await picker.pickImage(source: source, imageQuality: 85);
+    final picked = await picker.pickImage(source: source, imageQuality: 85);
     if (picked == null) return;
 
     setState(() {
@@ -93,86 +87,113 @@ class _ScanScreenState extends State<ScanScreen>
 
   // ── Extract amount, vendor, date from raw text ────────────────
   void _extractData(String text) {
-    final lines =
-        text.split('\n').map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
+    final lines = text.split('\n').map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
     _rawLines = lines;
 
-    // Amount — find largest number that looks like a price
+    // ── Amount extraction — smart priority system ─────────────────
     double bestAmount = 0;
-    final amountRegex = RegExp(
-        r'(?:ksh|kshs|ksh\.|total|amount|jumla|bei)[\s:]*([0-9,]+(?:\.[0-9]{1,2})?)',
-        caseSensitive: false);
-    final allNumbers =
-        RegExp(r'\b([0-9,]{3,}(?:\.[0-9]{1,2})?)\b');
 
-    // First try labeled amounts
-    for (final match in amountRegex.allMatches(text)) {
-      final val =
-          double.tryParse(match.group(1)!.replaceAll(',', ''));
-      if (val != null && val > bestAmount) bestAmount = val;
+    // Priority 1: labeled totals
+    final totalPatterns = [
+      RegExp(r'(?:total|jumla|grand total|amount due|amount payable|subtotal)[\s:=]*ksh?s?\.?\s*([\d,]+(?:\.\d{1,2})?)',
+          caseSensitive: false),
+      RegExp(r'ksh?s?\.?\s*([\d,]+(?:\.\d{1,2})?)[\s]*(?:total|only)', caseSensitive: false),
+    ];
+
+    for (final pattern in totalPatterns) {
+      for (final match in pattern.allMatches(text)) {
+        final val = double.tryParse(match.group(1)!.replaceAll(',', ''));
+        if (val != null && val > bestAmount) bestAmount = val;
+      }
     }
 
-    // If nothing found try largest number
+    // Priority 2: Ksh labeled amounts
     if (bestAmount == 0) {
-      for (final match in allNumbers.allMatches(text)) {
-        final val =
-            double.tryParse(match.group(1)!.replaceAll(',', ''));
-        if (val != null && val > bestAmount && val < 10000000) {
-          bestAmount = val;
+      final kshPattern = RegExp(r'ksh?s?\.?\s*([\d,]+(?:\.\d{1,2})?)', caseSensitive: false);
+      final candidates = <double>[];
+      for (final match in kshPattern.allMatches(text)) {
+        final val = double.tryParse(match.group(1)!.replaceAll(',', ''));
+        // Filter out serial numbers, dates, phone numbers
+        if (val != null && val >= 10 && val < 10000000 && !_isSerialOrDate(match.group(1)!)) {
+          candidates.add(val);
+        }
+      }
+      // Pick the largest reasonable amount
+      if (candidates.isNotEmpty) {
+        candidates.sort();
+        bestAmount = candidates.last;
+      }
+    }
+
+    // Priority 3: standalone numbers on their own line
+    if (bestAmount == 0) {
+      for (final line in lines) {
+        final cleaned = line.replaceAll(',', '').trim();
+        final val = double.tryParse(cleaned);
+        if (val != null && val >= 50 && val < 10000000 && cleaned.length <= 10) {
+          if (val > bestAmount) bestAmount = val;
         }
       }
     }
-    _amount = bestAmount;
-    _amountController.text =
-        bestAmount > 0 ? bestAmount.toStringAsFixed(0) : '';
 
-    // Vendor — first meaningful line (usually business name)
+    _amount = bestAmount;
+    _amountController.text = bestAmount > 0 ? bestAmount.toStringAsFixed(0) : '';
+
+    // ── Vendor extraction ─────────────────────────────────────────
+    // Skip lines that are purely numbers, dates, or too short
     _vendor = '';
-    for (final line in lines.take(5)) {
-      if (line.length > 3 &&
-          !RegExp(r'^[0-9\s\-\/\*\.]+$').hasMatch(line) &&
-          !line.toLowerCase().contains('receipt') &&
-          !line.toLowerCase().contains('invoice')) {
+    final skipPatterns = [
+      RegExp(r'^[\d\s\-\/\*\.\,\:\#]+$'),
+      RegExp(r'receipt|invoice|tax|vat|date|time|tel|phone|cashier|server|table|order', caseSensitive: false),
+      RegExp(r'^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}$'),
+    ];
+
+    for (final line in lines.take(8)) {
+      if (line.length < 3) continue;
+      bool skip = false;
+      for (final pattern in skipPatterns) {
+        if (pattern.hasMatch(line)) {
+          skip = true;
+          break;
+        }
+      }
+      if (!skip) {
         _vendor = line;
         break;
       }
     }
     _vendorController.text = _vendor;
 
-    // Date
-    final dateRegex = RegExp(
-        r'\b(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})\b');
-    final dateMatch = dateRegex.firstMatch(text);
-    _date = dateMatch != null
-        ? dateMatch.group(1)!
-        : _formatDate(DateTime.now());
+    // ── Date extraction ───────────────────────────────────────────
+    final datePatterns = [
+      RegExp(r'\b(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})\b'),
+      RegExp(r'\b(\d{4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,2})\b'),
+      RegExp(r'(\d{1,2}\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+\d{4})', caseSensitive: false),
+    ];
 
-    // Category guess from keywords
+    _date = _formatDate(DateTime.now());
+    for (final pattern in datePatterns) {
+      final match = pattern.firstMatch(text);
+      if (match != null) {
+        _date = match.group(1)!;
+        break;
+      }
+    }
+
+    // ── Category from text ────────────────────────────────────────
     final lower = text.toLowerCase();
-    if (lower.contains('supermarket') ||
-        lower.contains('wholesale') ||
-        lower.contains('naivas') ||
-        lower.contains('quickmart') ||
-        lower.contains('hardware')) {
+    if (_matchesAny(
+        lower, ['supermarket', 'wholesale', 'naivas', 'quickmart', 'hardware', 'shop', 'store', 'duka', 'provision'])) {
       _category = ExpenseCategory.stock;
-    } else if (lower.contains('rent') ||
-        lower.contains('kodi') ||
-        lower.contains('lease')) {
+    } else if (_matchesAny(lower, ['rent', 'kodi', 'lease', 'letting', 'landlord'])) {
       _category = ExpenseCategory.rent;
-    } else if (lower.contains('salary') ||
-        lower.contains('wages') ||
-        lower.contains('mshahara')) {
+    } else if (_matchesAny(lower, ['salary', 'wages', 'mshahara', 'payroll', 'staff'])) {
       _category = ExpenseCategory.salary;
-    } else if (lower.contains('matatu') ||
-        lower.contains('petrol') ||
-        lower.contains('fuel') ||
-        lower.contains('uber') ||
-        lower.contains('parking')) {
+    } else if (_matchesAny(
+        lower, ['matatu', 'petrol', 'fuel', 'uber', 'parking', 'transport', 'bolt', 'taxi', 'bus'])) {
       _category = ExpenseCategory.transport;
-    } else if (lower.contains('kplc') ||
-        lower.contains('water') ||
-        lower.contains('safaricom') ||
-        lower.contains('electricity')) {
+    } else if (_matchesAny(
+        lower, ['kplc', 'water', 'safaricom', 'electricity', 'internet', 'airtime', 'wifi', 'utility'])) {
       _category = ExpenseCategory.utilities;
     } else {
       _category = ExpenseCategory.other;
@@ -180,20 +201,30 @@ class _ScanScreenState extends State<ScanScreen>
     _selectedCategory = _category.name;
   }
 
-  String _formatDate(DateTime d) =>
-      '${d.day}/${d.month}/${d.year}';
+  bool _isSerialOrDate(String s) {
+    // Serial numbers tend to have no commas and are long
+    final clean = s.replaceAll(',', '');
+    if (clean.length > 8) return true;
+    // Looks like a year
+    final val = double.tryParse(clean);
+    if (val != null && val >= 2000 && val <= 2100) return true;
+    return false;
+  }
+
+  bool _matchesAny(String text, List<String> keywords) {
+    return keywords.any((k) => text.contains(k));
+  }
+
+  String _formatDate(DateTime d) => '${d.day}/${d.month}/${d.year}';
 
   Future<void> _saveTransaction() async {
-    final amount =
-        double.tryParse(_amountController.text) ?? _amount;
+    final amount = double.tryParse(_amountController.text) ?? _amount;
     if (amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Please enter a valid amount',
-            style: GoogleFonts.plusJakartaSans(color: Colors.white)),
+        content: Text('Please enter a valid amount', style: GoogleFonts.plusJakartaSans(color: Colors.white)),
         backgroundColor: SukuColors.error,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(16),
       ));
       return;
@@ -202,14 +233,11 @@ class _ScanScreenState extends State<ScanScreen>
     setState(() => _saving = true);
     HapticFeedback.lightImpact();
 
-    final cat = ExpenseCategory.values.firstWhere(
-        (e) => e.name == _selectedCategory,
-        orElse: () => ExpenseCategory.other);
+    final cat =
+        ExpenseCategory.values.firstWhere((e) => e.name == _selectedCategory, orElse: () => ExpenseCategory.other);
 
     final success = await TransactionService.addTransaction(
-      title: _vendorController.text.isNotEmpty
-          ? _vendorController.text
-          : 'Receipt scan',
+      title: _vendorController.text.isNotEmpty ? _vendorController.text : 'Receipt scan',
       vendor: _vendorController.text,
       amount: amount,
       type: TransactionType.expense,
@@ -224,19 +252,15 @@ class _ScanScreenState extends State<ScanScreen>
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_rounded,
-                color: Colors.white, size: 18),
+            const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
             const SizedBox(width: 8),
             Text('Imeingizwa! Transaction saved ✓',
-                style: GoogleFonts.plusJakartaSans(
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white)),
+                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, color: Colors.white)),
           ],
         ),
         backgroundColor: SukuColors.green,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(16),
       ));
       Navigator.of(context).pop(true);
@@ -247,9 +271,7 @@ class _ScanScreenState extends State<ScanScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: SukuColors.navy,
-      body: _state == ScanState.manual
-          ? _buildManualEntry()
-          : _buildCameraUI(),
+      body: _state == ScanState.manual ? _buildManualEntry() : _buildCameraUI(),
     );
   }
 
@@ -266,15 +288,12 @@ class _ScanScreenState extends State<ScanScreen>
             ),
           ),
         ),
-        CustomPaint(
-            size: MediaQuery.of(context).size,
-            painter: _GridPainter()),
+        CustomPaint(size: MediaQuery.of(context).size, painter: _GridPainter()),
         SafeArea(
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 20, vertical: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -287,8 +306,7 @@ class _ScanScreenState extends State<ScanScreen>
                           color: Colors.white.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.close_rounded,
-                            color: Colors.white, size: 20),
+                        child: const Icon(Icons.close_rounded, color: Colors.white, size: 20),
                       ),
                     ),
                     Text(
@@ -297,35 +315,27 @@ class _ScanScreenState extends State<ScanScreen>
                           : _state == ScanState.result
                               ? 'Imesomwa! ✓'
                               : 'Scan Receipt',
-                      style: GoogleFonts.plusJakartaSans(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white),
+                      style:
+                          GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white),
                     ),
                     GestureDetector(
-                      onTap: () =>
-                          setState(() => _state = ScanState.manual),
+                      onTap: () => setState(() => _state = ScanState.manual),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text('Manual',
                             style: GoogleFonts.plusJakartaSans(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white)),
+                                fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
                       ),
                     ),
                   ],
                 ),
               ),
               Expanded(
-                child: _state == ScanState.result
-                    ? _buildResultSheet()
-                    : _buildViewfinder(),
+                child: _state == ScanState.result ? _buildResultSheet() : _buildViewfinder(),
               ),
             ],
           ),
@@ -339,12 +349,8 @@ class _ScanScreenState extends State<ScanScreen>
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          _state == ScanState.scanning
-              ? 'Inasoma maandishi...'
-              : 'Chagua picha ya risiti',
-          style: GoogleFonts.plusJakartaSans(
-              fontSize: 14,
-              color: Colors.white.withOpacity(0.7)),
+          _state == ScanState.scanning ? 'Inasoma maandishi...' : 'Chagua picha ya risiti',
+          style: GoogleFonts.plusJakartaSans(fontSize: 14, color: Colors.white.withOpacity(0.7)),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 30),
@@ -355,9 +361,7 @@ class _ScanScreenState extends State<ScanScreen>
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: _state == ScanState.scanning
-                  ? SukuColors.green
-                  : Colors.white.withOpacity(0.4),
+              color: _state == ScanState.scanning ? SukuColors.green : Colors.white.withOpacity(0.4),
               width: 2,
             ),
           ),
@@ -372,40 +376,28 @@ class _ScanScreenState extends State<ScanScreen>
                     ? Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const CircularProgressIndicator(
-                              color: SukuColors.green,
-                              strokeWidth: 3),
+                          const CircularProgressIndicator(color: SukuColors.green, strokeWidth: 3),
                           const SizedBox(height: 16),
                           Text('ML Kit\nInasoma...',
                               textAlign: TextAlign.center,
                               style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: SukuColors.green)),
+                                  fontSize: 14, fontWeight: FontWeight.w600, color: SukuColors.green)),
                         ],
                       )
                     : _imageFile != null
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(18),
                             child: Image.file(_imageFile!,
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                                height: double.infinity),
+                                fit: BoxFit.cover, width: double.infinity, height: double.infinity),
                           )
                         : Column(
-                            mainAxisAlignment:
-                                MainAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.receipt_long_rounded,
-                                  size: 48,
-                                  color:
-                                      Colors.white.withOpacity(0.25)),
+                              Icon(Icons.receipt_long_rounded, size: 48, color: Colors.white.withOpacity(0.25)),
                               const SizedBox(height: 12),
                               Text('Receipt here',
-                                  style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 13,
-                                      color: Colors.white
-                                          .withOpacity(0.3))),
+                                  style:
+                                      GoogleFonts.plusJakartaSans(fontSize: 13, color: Colors.white.withOpacity(0.3))),
                             ],
                           ),
               ),
@@ -437,22 +429,17 @@ class _ScanScreenState extends State<ScanScreen>
                       end: Alignment.bottomRight,
                     ),
                     boxShadow: [
-                      BoxShadow(
-                          color: SukuColors.orange.withOpacity(0.5),
-                          blurRadius: 20,
-                          offset: const Offset(0, 8)),
+                      BoxShadow(color: SukuColors.orange.withOpacity(0.5), blurRadius: 20, offset: const Offset(0, 8)),
                     ],
                   ),
-                  child: const Icon(Icons.camera_alt_rounded,
-                      color: Colors.white, size: 30),
+                  child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 30),
                 ),
               ),
               const SizedBox(width: 32),
               _CameraBtn(
                 icon: Icons.edit_rounded,
                 label: 'Manual',
-                onTap: () =>
-                    setState(() => _state = ScanState.manual),
+                onTap: () => setState(() => _state = ScanState.manual),
               ),
             ],
           ),
@@ -472,25 +459,20 @@ class _ScanScreenState extends State<ScanScreen>
             children: [
               // Success banner
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
                   color: SukuColors.green.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                      color: SukuColors.green.withOpacity(0.3)),
+                  border: Border.all(color: SukuColors.green.withOpacity(0.3)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.check_circle_rounded,
-                        color: SukuColors.green, size: 18),
+                    const Icon(Icons.check_circle_rounded, color: SukuColors.green, size: 18),
                     const SizedBox(width: 8),
                     Text('Receipt scanned! Review and confirm.',
                         style: GoogleFonts.plusJakartaSans(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: SukuColors.green)),
+                            fontSize: 13, fontWeight: FontWeight.w600, color: SukuColors.green)),
                   ],
                 ),
               ),
@@ -508,31 +490,24 @@ class _ScanScreenState extends State<ScanScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      mainAxisAlignment:
-                          MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text('Extracted Data',
                             style: GoogleFonts.plusJakartaSans(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: SukuColors.textSecondary)),
+                                fontSize: 13, fontWeight: FontWeight.w700, color: SukuColors.textSecondary)),
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: SukuColors.greenSurface,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.auto_awesome_rounded,
-                                  size: 12, color: SukuColors.green),
+                              const Icon(Icons.auto_awesome_rounded, size: 12, color: SukuColors.green),
                               const SizedBox(width: 4),
                               Text('ML Kit OCR',
                                   style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
-                                      color: SukuColors.green)),
+                                      fontSize: 11, fontWeight: FontWeight.w700, color: SukuColors.green)),
                             ],
                           ),
                         ),
@@ -543,9 +518,7 @@ class _ScanScreenState extends State<ScanScreen>
                     // Amount — editable
                     Text('Amount (Ksh)',
                         style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12,
-                            color: SukuColors.textSecondary,
-                            fontWeight: FontWeight.w500)),
+                            fontSize: 12, color: SukuColors.textSecondary, fontWeight: FontWeight.w500)),
                     const SizedBox(height: 6),
                     TextField(
                       controller: _amountController,
@@ -557,25 +530,20 @@ class _ScanScreenState extends State<ScanScreen>
                           letterSpacing: -0.5),
                       decoration: InputDecoration(
                         prefixText: 'Ksh ',
-                        prefixStyle: GoogleFonts.plusJakartaSans(
-                            fontSize: 14,
-                            color: SukuColors.textSecondary),
+                        prefixStyle: GoogleFonts.plusJakartaSans(fontSize: 14, color: SukuColors.textSecondary),
                         filled: true,
                         fillColor: SukuColors.surfaceAlt,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                              color: SukuColors.border),
+                          borderSide: const BorderSide(color: SukuColors.border),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                              color: SukuColors.border),
+                          borderSide: const BorderSide(color: SukuColors.border),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                              color: SukuColors.green, width: 1.5),
+                          borderSide: const BorderSide(color: SukuColors.green, width: 1.5),
                         ),
                       ),
                     ),
@@ -584,32 +552,25 @@ class _ScanScreenState extends State<ScanScreen>
                     // Vendor — editable
                     Text('Vendor / Shop',
                         style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12,
-                            color: SukuColors.textSecondary,
-                            fontWeight: FontWeight.w500)),
+                            fontSize: 12, color: SukuColors.textSecondary, fontWeight: FontWeight.w500)),
                     const SizedBox(height: 6),
                     TextField(
                       controller: _vendorController,
-                      style: GoogleFonts.plusJakartaSans(
-                          fontSize: 15,
-                          color: SukuColors.textPrimary),
+                      style: GoogleFonts.plusJakartaSans(fontSize: 15, color: SukuColors.textPrimary),
                       decoration: InputDecoration(
                         filled: true,
                         fillColor: SukuColors.surfaceAlt,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                              color: SukuColors.border),
+                          borderSide: const BorderSide(color: SukuColors.border),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                              color: SukuColors.border),
+                          borderSide: const BorderSide(color: SukuColors.border),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                              color: SukuColors.green, width: 1.5),
+                          borderSide: const BorderSide(color: SukuColors.green, width: 1.5),
                         ),
                       ),
                     ),
@@ -617,19 +578,14 @@ class _ScanScreenState extends State<ScanScreen>
 
                     // Date
                     Row(
-                      mainAxisAlignment:
-                          MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text('Date',
                             style: GoogleFonts.plusJakartaSans(
-                                fontSize: 12,
-                                color: SukuColors.textSecondary,
-                                fontWeight: FontWeight.w500)),
+                                fontSize: 12, color: SukuColors.textSecondary, fontWeight: FontWeight.w500)),
                         Text(_date,
                             style: GoogleFonts.plusJakartaSans(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: SukuColors.textPrimary)),
+                                fontSize: 14, fontWeight: FontWeight.w600, color: SukuColors.textPrimary)),
                       ],
                     ),
                     const SizedBox(height: 14),
@@ -637,56 +593,36 @@ class _ScanScreenState extends State<ScanScreen>
                     // Category
                     Text('Category',
                         style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12,
-                            color: SukuColors.textSecondary,
-                            fontWeight: FontWeight.w500)),
+                            fontSize: 12, color: SukuColors.textSecondary, fontWeight: FontWeight.w500)),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
                       children: ExpenseCategory.values.map((cat) {
-                        final active =
-                            _selectedCategory == cat.name;
+                        final active = _selectedCategory == cat.name;
                         return GestureDetector(
-                          onTap: () => setState(
-                              () => _selectedCategory = cat.name),
+                          onTap: () => setState(() => _selectedCategory = cat.name),
                           child: AnimatedContainer(
-                            duration:
-                                const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 7),
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                             decoration: BoxDecoration(
-                              color: active
-                                  ? cat.color.withOpacity(0.14)
-                                  : SukuColors.surfaceAlt,
-                              borderRadius:
-                                  BorderRadius.circular(10),
+                              color: active ? cat.color.withOpacity(0.14) : SukuColors.surfaceAlt,
+                              borderRadius: BorderRadius.circular(10),
                               border: Border.all(
-                                color: active
-                                    ? cat.color.withOpacity(0.5)
-                                    : SukuColors.border,
+                                color: active ? cat.color.withOpacity(0.5) : SukuColors.border,
                                 width: active ? 1.5 : 1,
                               ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(cat.icon,
-                                    size: 14,
-                                    color: active
-                                        ? cat.color
-                                        : SukuColors.textSecondary),
+                                Icon(cat.icon, size: 14, color: active ? cat.color : SukuColors.textSecondary),
                                 const SizedBox(width: 4),
                                 Text(cat.label,
-                                    style:
-                                        GoogleFonts.plusJakartaSans(
-                                            fontSize: 12,
-                                            fontWeight:
-                                                FontWeight.w600,
-                                            color: active
-                                                ? cat.color
-                                                : SukuColors
-                                                    .textSecondary)),
+                                    style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: active ? cat.color : SukuColors.textSecondary)),
                               ],
                             ),
                           ),
@@ -712,17 +648,12 @@ class _ScanScreenState extends State<ScanScreen>
                       },
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white70,
-                        side: const BorderSide(
-                            color: Colors.white24),
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14)),
+                        side: const BorderSide(color: Colors.white24),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
                       child: Text('Rescan',
-                          style: GoogleFonts.plusJakartaSans(
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white70)),
+                          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, color: Colors.white70)),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -734,23 +665,16 @@ class _ScanScreenState extends State<ScanScreen>
                           ? const SizedBox(
                               width: 18,
                               height: 18,
-                              child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2))
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                           : const Icon(Icons.check_rounded),
-                      label: Text(
-                          _saving ? 'Saving...' : 'Hifadhi — Save',
-                          style: GoogleFonts.plusJakartaSans(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700)),
+                      label: Text(_saving ? 'Saving...' : 'Hifadhi — Save',
+                          style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w700)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: SukuColors.green,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 16),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                         elevation: 0,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
                     ),
                   ),
@@ -778,9 +702,7 @@ class _ScanScreenState extends State<ScanScreen>
             }
           },
         ),
-        title: Text('Add Manually',
-            style: GoogleFonts.plusJakartaSans(
-                fontSize: 18, fontWeight: FontWeight.w700)),
+        title: Text('Add Manually', style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w700)),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -792,18 +714,13 @@ class _ScanScreenState extends State<ScanScreen>
             _buildField('Amount (Ksh)', 'e.g. 2500',
                 controller: _amountController,
                 keyboardType: TextInputType.number,
-                prefix: const Icon(Icons.attach_money_rounded,
-                    color: SukuColors.green, size: 20)),
+                prefix: const Icon(Icons.attach_money_rounded, color: SukuColors.green, size: 20)),
             const SizedBox(height: 16),
-            _buildField('Vendor / Shop Name',
-                'e.g. Naivas, Mama Ntilie',
-                controller: _vendorController),
+            _buildField('Vendor / Shop Name', 'e.g. Naivas, Mama Ntilie', controller: _vendorController),
             const SizedBox(height: 20),
             Text('Category',
                 style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: SukuColors.textPrimary)),
+                    fontSize: 14, fontWeight: FontWeight.w600, color: SukuColors.textPrimary)),
             const SizedBox(height: 10),
             Wrap(
               spacing: 10,
@@ -811,39 +728,26 @@ class _ScanScreenState extends State<ScanScreen>
               children: ExpenseCategory.values.map((cat) {
                 final active = _selectedCategory == cat.name;
                 return GestureDetector(
-                  onTap: () =>
-                      setState(() => _selectedCategory = cat.name),
+                  onTap: () => setState(() => _selectedCategory = cat.name),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
-                      color: active
-                          ? cat.color.withOpacity(0.15)
-                          : SukuColors.surface,
+                      color: active ? cat.color.withOpacity(0.15) : SukuColors.surface,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                          color: active
-                              ? cat.color.withOpacity(0.4)
-                              : SukuColors.border,
-                          width: active ? 1.5 : 1),
+                          color: active ? cat.color.withOpacity(0.4) : SukuColors.border, width: active ? 1.5 : 1),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(cat.icon,
-                            size: 16,
-                            color: active
-                                ? cat.color
-                                : SukuColors.textSecondary),
+                        Icon(cat.icon, size: 16, color: active ? cat.color : SukuColors.textSecondary),
                         const SizedBox(width: 6),
                         Text(cat.label,
                             style: GoogleFonts.plusJakartaSans(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
-                                color: active
-                                    ? cat.color
-                                    : SukuColors.textSecondary)),
+                                color: active ? cat.color : SukuColors.textSecondary)),
                       ],
                     ),
                   ),
@@ -858,20 +762,15 @@ class _ScanScreenState extends State<ScanScreen>
                 onPressed: _saving ? null : _saveTransaction,
                 icon: _saving
                     ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2.5))
+                        width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
                     : const Icon(Icons.save_rounded),
                 label: Text('Hifadhi — Save Transaction',
-                    style: GoogleFonts.plusJakartaSans(
-                        fontSize: 16, fontWeight: FontWeight.w700)),
+                    style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w700)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: SukuColors.green,
                   foregroundColor: Colors.white,
                   elevation: 0,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
               ),
             ),
@@ -883,44 +782,35 @@ class _ScanScreenState extends State<ScanScreen>
   }
 
   Widget _buildField(String label, String hint,
-      {TextEditingController? controller,
-      TextInputType? keyboardType,
-      Widget? prefix}) {
+      {TextEditingController? controller, TextInputType? keyboardType, Widget? prefix}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: GoogleFonts.plusJakartaSans(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: SukuColors.textPrimary)),
+            style:
+                GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w600, color: SukuColors.textPrimary)),
         const SizedBox(height: 8),
         TextField(
           controller: controller,
           keyboardType: keyboardType,
-          style: GoogleFonts.plusJakartaSans(
-              fontSize: 15, color: SukuColors.textPrimary),
+          style: GoogleFonts.plusJakartaSans(fontSize: 15, color: SukuColors.textPrimary),
           decoration: InputDecoration(
             hintText: hint,
             prefixIcon: prefix,
-            hintStyle: GoogleFonts.plusJakartaSans(
-                fontSize: 14, color: SukuColors.textHint),
+            hintStyle: GoogleFonts.plusJakartaSans(fontSize: 14, color: SukuColors.textHint),
             filled: true,
             fillColor: SukuColors.surface,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide:
-                  const BorderSide(color: SukuColors.border),
+              borderSide: const BorderSide(color: SukuColors.border),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide:
-                  const BorderSide(color: SukuColors.border),
+              borderSide: const BorderSide(color: SukuColors.border),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(
-                  color: SukuColors.green, width: 1.5),
+              borderSide: const BorderSide(color: SukuColors.green, width: 1.5),
             ),
           ),
         ),
@@ -928,8 +818,7 @@ class _ScanScreenState extends State<ScanScreen>
     );
   }
 
-  Widget _buildCorner(
-      {required bool top, required bool left}) {
+  Widget _buildCorner({required bool top, required bool left}) {
     return Positioned(
       top: top ? 0 : null,
       bottom: top ? null : 0,
@@ -940,22 +829,10 @@ class _ScanScreenState extends State<ScanScreen>
         height: 24,
         decoration: BoxDecoration(
           border: Border(
-            top: top
-                ? const BorderSide(
-                    color: SukuColors.green, width: 3)
-                : BorderSide.none,
-            bottom: top
-                ? BorderSide.none
-                : const BorderSide(
-                    color: SukuColors.green, width: 3),
-            left: left
-                ? const BorderSide(
-                    color: SukuColors.green, width: 3)
-                : BorderSide.none,
-            right: left
-                ? BorderSide.none
-                : const BorderSide(
-                    color: SukuColors.green, width: 3),
+            top: top ? const BorderSide(color: SukuColors.green, width: 3) : BorderSide.none,
+            bottom: top ? BorderSide.none : const BorderSide(color: SukuColors.green, width: 3),
+            left: left ? const BorderSide(color: SukuColors.green, width: 3) : BorderSide.none,
+            right: left ? BorderSide.none : const BorderSide(color: SukuColors.green, width: 3),
           ),
         ),
       ),
@@ -968,10 +845,7 @@ class _CameraBtn extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
 
-  const _CameraBtn(
-      {required this.icon,
-      required this.label,
-      required this.onTap});
+  const _CameraBtn({required this.icon, required this.label, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -985,17 +859,14 @@ class _CameraBtn extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.1),
               shape: BoxShape.circle,
-              border: Border.all(
-                  color: Colors.white.withOpacity(0.2)),
+              border: Border.all(color: Colors.white.withOpacity(0.2)),
             ),
             child: Icon(icon, color: Colors.white, size: 22),
           ),
           const SizedBox(height: 6),
           Text(label,
               style: GoogleFonts.plusJakartaSans(
-                  fontSize: 11,
-                  color: Colors.white.withOpacity(0.6),
-                  fontWeight: FontWeight.w500)),
+                  fontSize: 11, color: Colors.white.withOpacity(0.6), fontWeight: FontWeight.w500)),
         ],
       ),
     );

@@ -27,9 +27,7 @@ void backgroundMessageHandler(SmsMessage message) async {
 
 bool _isMpesaSms(String sms) {
   final lower = sms.toLowerCase();
-  return lower.contains('m-pesa') ||
-      lower.contains('mpesa') ||
-      (lower.contains('confirmed') && lower.contains('ksh'));
+  return lower.contains('m-pesa') || lower.contains('mpesa') || (lower.contains('confirmed') && lower.contains('ksh'));
 }
 
 class SmsService {
@@ -39,10 +37,8 @@ class SmsService {
 
   // ── Initialize notifications ──────────────────────────────────
   static Future<void> init() async {
-    const androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-    const settings =
-        InitializationSettings(android: androidSettings);
+    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const settings = InitializationSettings(android: androidSettings);
     await _notifications.initialize(
       settings,
       onDidReceiveNotificationResponse: (details) {},
@@ -56,8 +52,7 @@ class SmsService {
       importance: Importance.high,
     );
     await _notifications
-        .resolvePlatformSpecificImplementation
-            AndroidFlutterLocalNotificationsPlugin>()
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(channel);
   }
 
@@ -72,12 +67,10 @@ class SmsService {
   }
 
   // ── Start listening to incoming SMS ──────────────────────────
-  static Future<void> startListening(
-      {VoidCallback? onTransaction}) async {
+  static Future<void> startListening({VoidCallback? onTransaction}) async {
     onNewTransaction = onTransaction;
 
-    final granted =
-        await _telephony.requestPhoneAndSmsPermissions ?? false;
+    final granted = await _telephony.requestPhoneAndSmsPermissions ?? false;
     if (!granted) return;
 
     _telephony.listenIncomingSms(
@@ -113,8 +106,7 @@ class SmsService {
         title: parsed['type'] == TransactionType.income
             ? '💚 Money In — Ksh ${(parsed['amount'] as double).toStringAsFixed(0)}'
             : '🔴 Money Out — Ksh ${(parsed['amount'] as double).toStringAsFixed(0)}',
-        body:
-            '${parsed['vendor']} • Auto-saved to Suku',
+        body: '${parsed['vendor']} • Auto-saved to Suku',
       );
 
       // Refresh dashboard if app is open
@@ -123,8 +115,7 @@ class SmsService {
   }
 
   // ── Show local notification ───────────────────────────────────
-  static Future<void> _showNotification(
-      {required String title, required String body}) async {
+  static Future<void> _showNotification({required String title, required String body}) async {
     const androidDetails = AndroidNotificationDetails(
       'suku_mpesa',
       'M-Pesa Transactions',
@@ -135,11 +126,7 @@ class SmsService {
       color: Color(0xFF00A859),
     );
     const details = NotificationDetails(android: androidDetails);
-    await _notifications.show(
-        DateTime.now().millisecondsSinceEpoch ~/ 1000,
-        title,
-        body,
-        details);
+    await _notifications.show(DateTime.now().millisecondsSinceEpoch ~/ 1000, title, body, details);
   }
 
   // ── Parse M-Pesa SMS into transaction data ────────────────────
@@ -151,14 +138,11 @@ class SmsService {
     final amountMatch = amountRegex.firstMatch(sms);
     if (amountMatch == null) return null;
 
-    final amount = double.tryParse(
-            amountMatch.group(1)!.replaceAll(',', '')) ??
-        0;
+    final amount = double.tryParse(amountMatch.group(1)!.replaceAll(',', '')) ?? 0;
     if (amount <= 0) return null;
 
     // Type
-    final isIncome = sms.toLowerCase().contains('received') ||
-        sms.toLowerCase().contains('you have received');
+    final isIncome = sms.toLowerCase().contains('received') || sms.toLowerCase().contains('you have received');
 
     // Vendor
     String vendor = 'M-Pesa Transaction';
@@ -167,8 +151,7 @@ class SmsService {
       final m = fromRegex.firstMatch(sms);
       if (m != null) vendor = m.group(1)!.trim();
     } else {
-      final toRegex = RegExp(
-          r'(?:sent to|paid to) ([A-Z][A-Z\s]+?) (?:on|via|\d)');
+      final toRegex = RegExp(r'(?:sent to|paid to) ([A-Z][A-Z\s]+?) (?:on|via|\d)');
       final m = toRegex.firstMatch(sms);
       if (m != null) vendor = m.group(1)!.trim();
     }
@@ -190,9 +173,7 @@ class SmsService {
       cat = ExpenseCategory.stock;
     } else if (lower.contains('rent') || lower.contains('kodi')) {
       cat = ExpenseCategory.rent;
-    } else if (lower.contains('salary') ||
-        lower.contains('wages') ||
-        lower.contains('mshahara')) {
+    } else if (lower.contains('salary') || lower.contains('wages') || lower.contains('mshahara')) {
       cat = ExpenseCategory.salary;
     } else if (lower.contains('petrol') ||
         lower.contains('fuel') ||
@@ -204,9 +185,7 @@ class SmsService {
 
     return {
       'amount': amount,
-      'type': isIncome
-          ? TransactionType.income
-          : TransactionType.expense,
+      'type': isIncome ? TransactionType.income : TransactionType.expense,
       'vendor': vendor,
       'category': isIncome ? null : cat,
     };
@@ -220,14 +199,8 @@ class SmsService {
         filter: SmsFilter.where(SmsColumn.ADDRESS)
             .equals('MPESA')
             .and(SmsColumn.DATE)
-            .greaterThan(
-                (DateTime.now().subtract(const Duration(days: 30))
-                            .millisecondsSinceEpoch ~/
-                        1000)
-                    .toString()),
-        sortOrder: [
-          OrderBy(SmsColumn.DATE, sort: Sort.DESC)
-        ],
+            .greaterThan((DateTime.now().subtract(const Duration(days: 30)).millisecondsSinceEpoch ~/ 1000).toString()),
+        sortOrder: [OrderBy(SmsColumn.DATE, sort: Sort.DESC)],
       );
       return messages;
     } catch (e) {

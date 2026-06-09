@@ -20,6 +20,9 @@ dependencies:
   image_picker: ^1.0.7
   http: ^1.2.0
   google_mlkit_text_recognition: ^0.13.0
+  telephony: ^0.2.0
+  flutter_local_notifications: ^17.2.4
+  permission_handler: ^11.3.0
 
 
   flutter_test:

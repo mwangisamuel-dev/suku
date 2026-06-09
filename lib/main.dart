@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config/supabase_config.dart';
 import 'theme/suku_theme.dart';
 import 'screens/splash_screen.dart';
+import 'services/sms_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,6 +13,9 @@ void main() async {
     url: SupabaseConfig.supabaseUrl,
     anonKey: SupabaseConfig.supabaseAnonKey,
   );
+
+  // Initialize notifications
+  await SmsService.init();
 
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,

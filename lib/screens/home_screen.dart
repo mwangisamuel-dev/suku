@@ -417,10 +417,8 @@ class _DashboardTab extends StatelessWidget {
                     (_, i) => TransactionTile(
                       transaction: transactions[i],
                       onTap: () async {
-                        final result = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => TransactionDetailScreen(transaction: transactions[i])));
+                        final result = await Navigator.push(context,
+                            MaterialPageRoute(builder: (_) => TransactionDetailScreen(transaction: transactions[i])));
                         if (result == true) onRefresh();
                       },
                     ),
@@ -952,11 +950,9 @@ class _TransactionsTabState extends State<_TransactionsTab> {
                     (_, i) => TransactionTile(
                       transaction: filtered[i],
                       onTap: () async {
-                        final result = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => TransactionDetailScreen(transaction: filtered[i])));
-                        if (result == true) onRefresh();
+                        final result = await Navigator.push(context,
+                            MaterialPageRoute(builder: (_) => TransactionDetailScreen(transaction: filtered[i])));
+                        if (result == true) widget.onRefresh();
                       },
                     ),
                     childCount: filtered.length,

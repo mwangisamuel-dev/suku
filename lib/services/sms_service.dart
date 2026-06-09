@@ -70,7 +70,7 @@ class SmsService {
   static Future<void> startListening({VoidCallback? onTransaction}) async {
     onNewTransaction = onTransaction;
 
-    final granted = await _telephony.requestPhoneAndSmsPermissions ?? false;
+    final granted = (await _telephony.requestPhoneAndSmsPermissions) ?? false;
     if (!granted) return;
 
     _telephony.listenIncomingSms(
@@ -126,7 +126,9 @@ class SmsService {
       color: Color(0xFF00A859),
     );
     const details = NotificationDetails(android: androidDetails);
-    await _notifications.show(DateTime.now().millisecondsSinceEpoch ~/ 1000, title, body, details);
+    // Use a more stable ID based on timestamp hash
+    final notificationId = title.hashCode.abs() % 100000;
+    await _notifications.show(notificationId, title, body, details);
   }
 
   // ── Parse M-Pesa SMS into transaction data ────────────────────
@@ -145,43 +147,10 @@ class SmsService {
     final isIncome = sms.toLowerCase().contains('received') || sms.toLowerCase().contains('you have received');
 
     // Vendor
-    String vendor = 'M-Pesa Transaction';
-    if (isIncome) {
-      final fromRegex = RegExp(r'from ([A-Z][A-Z\s]+?) (?:\d|on)');
-      final m = fromRegex.firstMatch(sms);
-      if (m != null) vendor = m.group(1)!.trim();
-    } else {
-      final toRegex = RegExp(r'(?:sent to|paid to) ([A-Z][A-Z\s]+?) (?:on|via|\d)');
-      final m = toRegex.firstMatch(sms);
-      if (m != null) vendor = m.group(1)!.trim();
-    }
+    String vendor = _extractVendor(sms, isIncome);
 
     // Category
-    final lower = sms.toLowerCase();
-    ExpenseCategory cat = ExpenseCategory.other;
-    if (lower.contains('kplc') ||
-        lower.contains('kenya power') ||
-        lower.contains('safaricom') ||
-        lower.contains('water') ||
-        lower.contains('electricity')) {
-      cat = ExpenseCategory.utilities;
-    } else if (lower.contains('naivas') ||
-        lower.contains('quickmart') ||
-        lower.contains('carrefour') ||
-        lower.contains('wholesale') ||
-        lower.contains('supermarket')) {
-      cat = ExpenseCategory.stock;
-    } else if (lower.contains('rent') || lower.contains('kodi')) {
-      cat = ExpenseCategory.rent;
-    } else if (lower.contains('salary') || lower.contains('wages') || lower.contains('mshahara')) {
-      cat = ExpenseCategory.salary;
-    } else if (lower.contains('petrol') ||
-        lower.contains('fuel') ||
-        lower.contains('matatu') ||
-        lower.contains('uber') ||
-        lower.contains('bolt')) {
-      cat = ExpenseCategory.transport;
-    }
+    final cat = _detectCategory(sms);
 
     return {
       'amount': amount,
@@ -191,18 +160,98 @@ class SmsService {
     };
   }
 
+  // ── Extract vendor name from SMS ──────────────────────────
+  static String _extractVendor(String sms, bool isIncome) {
+    try {
+      if (isIncome) {
+        final fromRegex = RegExp(r'from\s+([A-Z][A-Z\s]*?)\s+(?:\d|on)', caseSensitive: false);
+        final match = fromRegex.firstMatch(sms);
+        if (match != null) {
+          final vendor = match.group(1)?.trim();
+          if (vendor != null && vendor.isNotEmpty && vendor.length < 50) {
+            return vendor;
+          }
+        }
+      } else {
+        final toRegex = RegExp(r'(?:sent to|paid to)\s+([A-Z][A-Z\s]*?)\s+(?:on|via|\d)', caseSensitive: false);
+        final match = toRegex.firstMatch(sms);
+        if (match != null) {
+          final vendor = match.group(1)?.trim();
+          if (vendor != null && vendor.isNotEmpty && vendor.length < 50) {
+            return vendor;
+          }
+        }
+      }
+    } catch (_) {}
+    return 'M-Pesa Transaction';
+  }
+
+  // ── Detect transaction category ────────────────────────────
+  static ExpenseCategory _detectCategory(String sms) {
+    final lower = sms.toLowerCase();
+
+    const categoryKeywords = {
+      ExpenseCategory.utilities: [
+        'kplc',
+        'kenya power',
+        'safaricom',
+        'water',
+        'electricity',
+        'internet',
+        'airtime',
+        'wifi',
+        'power',
+        'utility'
+      ],
+      ExpenseCategory.stock: [
+        'naivas',
+        'quickmart',
+        'carrefour',
+        'wholesale',
+        'supermarket',
+        'shop',
+        'store',
+        'duka',
+        'market',
+        'hardware',
+        'provision'
+      ],
+      ExpenseCategory.rent: ['rent', 'kodi', 'lease', 'letting', 'landlord'],
+      ExpenseCategory.salary: ['salary', 'wages', 'mshahara', 'payroll', 'staff'],
+      ExpenseCategory.transport: [
+        'petrol',
+        'fuel',
+        'matatu',
+        'uber',
+        'bolt',
+        'taxi',
+        'bus',
+        'parking',
+        'transport',
+        'fare'
+      ],
+    };
+
+    for (final entry in categoryKeywords.entries) {
+      if (entry.value.any((keyword) => lower.contains(keyword))) {
+        return entry.key;
+      }
+    }
+    return ExpenseCategory.other;
+  }
+
   // ── Read existing M-Pesa SMS from inbox ───────────────────────
   static Future<List<SmsMessage>> getRecentMpesaSms() async {
     try {
+      final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
+      final timestamp = (thirtyDaysAgo.millisecondsSinceEpoch ~/ 1000).toString();
+
       final messages = await _telephony.getInboxSms(
         columns: [SmsColumn.ADDRESS, SmsColumn.BODY, SmsColumn.DATE],
-        filter: SmsFilter.where(SmsColumn.ADDRESS)
-            .equals('MPESA')
-            .and(SmsColumn.DATE)
-            .greaterThan((DateTime.now().subtract(const Duration(days: 30)).millisecondsSinceEpoch ~/ 1000).toString()),
+        filter: SmsFilter.where(SmsColumn.ADDRESS).equals('MPESA').and(SmsColumn.DATE).greaterThan(timestamp),
         sortOrder: [OrderBy(SmsColumn.DATE, sort: Sort.DESC)],
       );
-      return messages;
+      return messages ?? [];
     } catch (e) {
       return [];
     }

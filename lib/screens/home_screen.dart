@@ -1083,6 +1083,7 @@ class _TransactionsTabState extends State<_TransactionsTab> {
                   delegate: SliverChildBuilderDelegate(
                     (_, i) => TransactionTile(
                       transaction: filtered[i],
+                      hideAmount: !balanceVisible,
                       onTap: () async {
                         final result = await Navigator.push(context,
                             MaterialPageRoute(builder: (_) => TransactionDetailScreen(transaction: filtered[i])));

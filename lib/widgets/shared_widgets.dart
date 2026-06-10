@@ -131,12 +131,8 @@ class TransactionTile extends StatelessWidget {
               ),
               child: Center(
                 child: Icon(
-                  isIncome
-                      ? Icons.trending_up_rounded
-                      : (transaction.category?.icon ?? Icons.receipt_rounded),
-                  color: isIncome
-                      ? SukuColors.green
-                      : (transaction.category?.color ?? SukuColors.textHint),
+                  isIncome ? Icons.trending_up_rounded : (transaction.category?.icon ?? Icons.receipt_rounded),
+                  color: isIncome ? SukuColors.green : (transaction.category?.color ?? SukuColors.textHint),
                   size: 22,
                 ),
               ),
@@ -237,14 +233,13 @@ class SectionHeader extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(title,
-            style: GoogleFonts.plusJakartaSans(
-                fontSize: 16, fontWeight: FontWeight.w700, color: SukuColors.textPrimary)),
+            style:
+                GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w700, color: SukuColors.textPrimary)),
         if (action != null)
           GestureDetector(
             onTap: onAction,
             child: Text(action!,
-                style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13, fontWeight: FontWeight.w600, color: SukuColors.green)),
+                style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w600, color: SukuColors.green)),
           ),
       ],
     );
@@ -346,6 +341,7 @@ class StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hidden = amount < 0;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -367,18 +363,15 @@ class StatCard extends StatelessWidget {
                 ),
                 child: Icon(icon, color: color, size: 18),
               ),
-              if (change != null)
+              if (change != null && !hidden)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                   decoration: BoxDecoration(
                     color: color.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(
-                    change!,
-                    style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11, fontWeight: FontWeight.w700, color: color),
-                  ),
+                  child: Text(change!,
+                      style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700, color: color)),
                 ),
             ],
           ),
@@ -387,12 +380,13 @@ class StatCard extends StatelessWidget {
               style: GoogleFonts.plusJakartaSans(
                   fontSize: 12, fontWeight: FontWeight.w500, color: SukuColors.textSecondary)),
           const SizedBox(height: 4),
-          Text(
-            'Ksh ${NumberFormat('#,##0').format(amount)}',
-            style: GoogleFonts.plusJakartaSans(
-                fontSize: 18, fontWeight: FontWeight.w800, color: SukuColors.textPrimary,
-                letterSpacing: -0.5),
-          ),
+          hidden
+              ? Text('Ksh ••••',
+                  style: GoogleFonts.plusJakartaSans(
+                      fontSize: 18, fontWeight: FontWeight.w800, color: SukuColors.textPrimary, letterSpacing: 2))
+              : Text('Ksh ${NumberFormat('#,##0').format(amount)}',
+                  style: GoogleFonts.plusJakartaSans(
+                      fontSize: 18, fontWeight: FontWeight.w800, color: SukuColors.textPrimary, letterSpacing: -0.5)),
         ],
       ),
     );

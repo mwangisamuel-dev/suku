@@ -98,9 +98,10 @@ class CategoryBadge extends StatelessWidget {
 // ─── Transaction Tile ─────────────────────────────────────────────────────────
 class TransactionTile extends StatelessWidget {
   final Transaction transaction;
+  final bool hideAmount;
   final VoidCallback? onTap;
 
-  const TransactionTile({super.key, required this.transaction, this.onTap});
+  const TransactionTile({super.key, required this.transaction, required this.hideAmount, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -197,7 +198,7 @@ class TransactionTile extends StatelessWidget {
             const SizedBox(width: 8),
             // Amount
             Text(
-              '${isIncome ? '+' : '-'} Ksh ${NumberFormat('#,##0').format(transaction.amount)}',
+              hideAmount ? '••••' : '${isIncome ? '+' : '-'} Ksh ${NumberFormat('#,##0').format(transaction.amount)}',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,

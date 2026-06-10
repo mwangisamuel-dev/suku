@@ -101,6 +101,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 _TransactionsTab(
                   transactions: _transactions,
                   onRefresh: _loadData,
+                  hideAmount: !_balanceVisible,
                 ),
                 const SizedBox(),
                 _ReportsTab(summary: _summary),
@@ -383,7 +384,7 @@ class _DashboardTab extends StatelessWidget {
                   if (summary.byCategory.isNotEmpty) ...[
                     SectionHeader(title: 'Matumizi ya Mwezi', action: 'See all', onAction: () {}),
                     const SizedBox(height: 14),
-                    _CategoryBreakdown(summary: summary),
+                    _CategoryBreakdown(summary: summary, balanceVisible: balanceVisible),
                     const SizedBox(height: 24),
                   ],
                 ],
@@ -935,8 +936,9 @@ class _ChartToggleBtn extends StatelessWidget {
 // ─── Category Breakdown ────────────────────────────────────────────────────────
 class _CategoryBreakdown extends StatelessWidget {
   final MonthlySummary summary;
+  final bool balanceVisible;
 
-  const _CategoryBreakdown({required this.summary});
+  const _CategoryBreakdown({required this.summary, required this.balanceVisible});
 
   @override
   Widget build(BuildContext context) {
@@ -968,7 +970,7 @@ class _CategoryBreakdown extends StatelessWidget {
                   ),
                   Row(
                     children: [
-                      Text('Ksh ${NumberFormat('#,##0').format(e.value)}',
+                      Text(balanceVisible ? 'Ksh ${NumberFormat('#,##0').format(e.value)}' : 'Ksh ••••',
                           style: GoogleFonts.plusJakartaSans(
                               fontSize: 13, fontWeight: FontWeight.w700, color: SukuColors.textPrimary)),
                       const SizedBox(width: 8),
@@ -999,10 +1001,10 @@ class _CategoryBreakdown extends StatelessWidget {
 // ─── Transactions Tab ──────────────────────────────────────────────────────────
 class _TransactionsTab extends StatefulWidget {
   final List<Transaction> transactions;
-  final bool balanceVisible;
   final VoidCallback onRefresh;
+  final bool hideAmount;
 
-  const _TransactionsTab({required this.transactions, required this.balanceVisible, required this.onRefresh});
+  const _TransactionsTab({required this.transactions, required this.onRefresh, required this.hideAmount});
 
   @override
   State<_TransactionsTab> createState() => _TransactionsTabState();
@@ -1083,7 +1085,7 @@ class _TransactionsTabState extends State<_TransactionsTab> {
                   delegate: SliverChildBuilderDelegate(
                     (_, i) => TransactionTile(
                       transaction: filtered[i],
-                      hideAmount: !balanceVisible,
+                      hideAmount: widget.hideAmount,
                       onTap: () async {
                         final result = await Navigator.push(context,
                             MaterialPageRoute(builder: (_) => TransactionDetailScreen(transaction: filtered[i])));

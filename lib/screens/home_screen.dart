@@ -15,6 +15,7 @@ import 'mpesa_screen.dart';
 import 'transaction_detail_screen.dart';
 import 'phone_screen.dart';
 import '../services/sms_service.dart';
+import 'reports_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -104,7 +105,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   hideAmount: !_balanceVisible,
                 ),
                 const SizedBox(),
-                _ReportsTab(summary: _summary),
+                const ReportsScreen(),
                 _SettingsTab(),
               ],
             ),
@@ -1126,121 +1127,6 @@ class _FilterChip extends StatelessWidget {
             style: GoogleFonts.plusJakartaSans(
                 fontSize: 13, fontWeight: FontWeight.w600, color: active ? c : SukuColors.textSecondary)),
       ),
-    );
-  }
-}
-
-// ─── Reports Tab ──────────────────────────────────────────────────────────────
-class _ReportsTab extends StatelessWidget {
-  final MonthlySummary summary;
-
-  const _ReportsTab({required this.summary});
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomScrollView(
-      slivers: [
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 20, 20, 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Ripoti',
-                    style: GoogleFonts.plusJakartaSans(
-                        fontSize: 24, fontWeight: FontWeight.w800, color: SukuColors.textPrimary, letterSpacing: -0.5)),
-                const SizedBox(height: 20),
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [SukuColors.navy, SukuColors.navyLight],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(22),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('KRA Tax Report',
-                                style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
-                            const SizedBox(height: 6),
-                            Text(DateFormat('MMMM yyyy').format(DateTime.now()),
-                                style: GoogleFonts.plusJakartaSans(fontSize: 13, color: Colors.white.withOpacity(0.6))),
-                            const SizedBox(height: 14),
-                            ElevatedButton.icon(
-                              onPressed: () {},
-                              icon: const Icon(Icons.download_rounded, size: 16),
-                              label: const Text('Generate PDF'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: SukuColors.orange,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                textStyle: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w700),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                elevation: 0,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const Icon(Icons.picture_as_pdf_rounded, color: SukuColors.orange, size: 40),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: SukuColors.surface,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: SukuColors.border),
-                  ),
-                  child: Column(
-                    children: [
-                      _summaryRow(context, 'Jumla ya Mapato', summary.totalIncome, SukuColors.green),
-                      const Divider(height: 20, color: SukuColors.border),
-                      _summaryRow(context, 'Jumla ya Matumizi', summary.totalExpenses, SukuColors.error),
-                      const Divider(height: 20, color: SukuColors.border),
-                      _summaryRow(context, 'Faida Halisi', summary.netProfit,
-                          summary.netProfit >= 0 ? SukuColors.green : SukuColors.error,
-                          bold: true),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _summaryRow(BuildContext context, String label, double amount, Color color, {bool bold = false}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label,
-            style: GoogleFonts.plusJakartaSans(
-                fontSize: bold ? 15 : 14,
-                fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
-                color: SukuColors.textPrimary)),
-        Text('Ksh ${NumberFormat('#,##0').format(amount)}',
-            style: GoogleFonts.plusJakartaSans(fontSize: bold ? 16 : 14, fontWeight: FontWeight.w700, color: color)),
-      ],
     );
   }
 }

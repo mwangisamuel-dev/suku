@@ -84,68 +84,72 @@ class _BusinessInfoScreenState extends State<BusinessInfoScreen> {
           padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
           child: _loading
               ? const Center(child: CircularProgressIndicator(color: SukuColors.green))
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const BackButton(color: SukuColors.textPrimary),
-                        const SizedBox(width: 8),
-                        Text('Business Info',
-                            style: GoogleFonts.plusJakartaSans(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w800,
-                                color: SukuColors.textPrimary,
-                                letterSpacing: -0.5)),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Text('Update your business name, location and category for reports and receipts.',
-                        style: GoogleFonts.plusJakartaSans(fontSize: 14, color: SukuColors.textSecondary, height: 1.5)),
-                    const SizedBox(height: 24),
-                    _buildField(label: 'Business Name', controller: _nameController, hint: 'e.g. Mama Kuku Shop'),
-                    const SizedBox(height: 14),
-                    _buildField(label: 'Location', controller: _locationController, hint: 'e.g. Nairobi, Kenya'),
-                    const SizedBox(height: 18),
-                    Text('Business Type',
-                        style: GoogleFonts.plusJakartaSans(
-                            fontSize: 14, fontWeight: FontWeight.w700, color: SukuColors.textPrimary)),
-                    const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: _businessTypes.map((type) {
-                        final value = type['value']!;
-                        final selected = _selectedType == value;
-                        return ChoiceChip(
-                          label: Text(type['label']!,
-                              style:
-                                  GoogleFonts.plusJakartaSans(color: selected ? Colors.white : SukuColors.textPrimary)),
-                          selected: selected,
-                          onSelected: (_) => setState(() => _selectedType = value),
-                          selectedColor: SukuColors.green,
-                          backgroundColor: SukuColors.surface,
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        );
-                      }).toList(),
-                    ),
-                    const Spacer(),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: ElevatedButton(
-                        onPressed: _canSave && !_saving ? _save : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: SukuColors.green,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        ),
-                        child: _saving
-                            ? const CircularProgressIndicator(color: Colors.white)
-                            : Text('Save business info',
-                                style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w700)),
+              : SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const BackButton(color: SukuColors.textPrimary),
+                          const SizedBox(width: 8),
+                          Text('Business Info',
+                              style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w800,
+                                  color: SukuColors.textPrimary,
+                                  letterSpacing: -0.5)),
+                        ],
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 20),
+                      Text('Update your business name, location and category for reports and receipts.',
+                          style:
+                              GoogleFonts.plusJakartaSans(fontSize: 14, color: SukuColors.textSecondary, height: 1.5)),
+                      const SizedBox(height: 24),
+                      _buildField(label: 'Business Name', controller: _nameController, hint: 'e.g. Mama Kuku Shop'),
+                      const SizedBox(height: 14),
+                      _buildField(label: 'Location', controller: _locationController, hint: 'e.g. Nairobi, Kenya'),
+                      const SizedBox(height: 18),
+                      Text('Business Type',
+                          style: GoogleFonts.plusJakartaSans(
+                              fontSize: 14, fontWeight: FontWeight.w700, color: SukuColors.textPrimary)),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: _businessTypes.map((type) {
+                          final value = type['value']!;
+                          final selected = _selectedType == value;
+                          return ChoiceChip(
+                            label: Text(type['label']!,
+                                style: GoogleFonts.plusJakartaSans(
+                                    color: selected ? Colors.white : SukuColors.textPrimary)),
+                            selected: selected,
+                            onSelected: (_) => setState(() => _selectedType = value),
+                            selectedColor: SukuColors.green,
+                            backgroundColor: SukuColors.surface,
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: ElevatedButton(
+                          onPressed: _canSave && !_saving ? _save : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: SukuColors.green,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                          child: _saving
+                              ? const CircularProgressIndicator(color: Colors.white)
+                              : Text('Save business info',
+                                  style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w700)),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
         ),
       ),

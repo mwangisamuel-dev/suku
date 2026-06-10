@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -299,27 +301,69 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                           value: '#${t.id.substring(0, 8).toUpperCase()}',
                         ),
                         const Divider(height: 24, color: SukuColors.border),
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
+                        if (t.receiptImagePath != null && File(t.receiptImagePath!).existsSync()) ...[
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: Image.file(
+                              File(t.receiptImagePath!),
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: 180,
+                              errorBuilder: (_, __, ___) => Container(
+                                width: double.infinity,
+                                height: 180,
                                 color: SukuColors.surfaceAlt,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Icon(Icons.receipt_long_rounded, size: 18, color: SukuColors.textSecondary),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                t.receiptImagePath != null
-                                    ? LanguageService.text('receiptAttached')
-                                    : LanguageService.text('receiptNotAttached'),
-                                style: GoogleFonts.plusJakartaSans(fontSize: 12, color: SukuColors.textSecondary),
+                                child: Center(
+                                  child: Text(LanguageService.text('receiptNotAttached'),
+                                      style:
+                                          GoogleFonts.plusJakartaSans(fontSize: 12, color: SukuColors.textSecondary)),
+                                ),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: SukuColors.surfaceAlt,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child:
+                                    const Icon(Icons.receipt_long_rounded, size: 18, color: SukuColors.textSecondary),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  LanguageService.text('receiptAttached'),
+                                  style: GoogleFonts.plusJakartaSans(fontSize: 12, color: SukuColors.textSecondary),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ] else ...[
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: SukuColors.surfaceAlt,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child:
+                                    const Icon(Icons.receipt_long_rounded, size: 18, color: SukuColors.textSecondary),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  LanguageService.text('receiptNotAttached'),
+                                  style: GoogleFonts.plusJakartaSans(fontSize: 12, color: SukuColors.textSecondary),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
                   ),

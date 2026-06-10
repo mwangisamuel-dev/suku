@@ -243,6 +243,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       type: TransactionType.expense,
       category: cat,
       notes: 'Scanned receipt — $_date',
+      receiptImagePath: _imageFile?.path,
     );
 
     if (!mounted) return;

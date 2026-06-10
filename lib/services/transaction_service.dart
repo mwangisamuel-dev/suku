@@ -4,8 +4,7 @@ import '../models/models.dart';
 class TransactionService {
   static final _supabase = Supabase.instance.client;
 
-  static String? get _userId =>
-      _supabase.auth.currentUser?.id;
+  static String? get _userId => _supabase.auth.currentUser?.id;
 
   // ── Save a transaction ────────────────────────────────────────
   static Future<bool> addTransaction({
@@ -16,6 +15,7 @@ class TransactionService {
     ExpenseCategory? category,
     bool isMpesa = false,
     String? notes,
+    String? receiptImagePath,
   }) async {
     try {
       await _supabase.from('transactions').insert({
@@ -27,6 +27,7 @@ class TransactionService {
         'category': category?.name,
         'is_mpesa': isMpesa,
         'notes': notes,
+        'receipt_image_path': receiptImagePath,
         'created_at': DateTime.now().toIso8601String(),
       });
       return true;
@@ -53,10 +54,7 @@ class TransactionService {
   // ── Delete a transaction ──────────────────────────────────────
   static Future<bool> deleteTransaction(String id) async {
     try {
-      await _supabase
-          .from('transactions')
-          .delete()
-          .eq('id', id);
+      await _supabase.from('transactions').delete().eq('id', id);
       return true;
     } catch (e) {
       return false;
@@ -70,13 +68,9 @@ class TransactionService {
       title: row['title'],
       vendor: row['vendor'],
       amount: (row['amount'] as num).toDouble(),
-      type: row['type'] == 'income'
-          ? TransactionType.income
-          : TransactionType.expense,
+      type: row['type'] == 'income' ? TransactionType.income : TransactionType.expense,
       category: row['category'] != null
-          ? ExpenseCategory.values.firstWhere(
-              (e) => e.name == row['category'],
-              orElse: () => ExpenseCategory.other)
+          ? ExpenseCategory.values.firstWhere((e) => e.name == row['category'], orElse: () => ExpenseCategory.other)
           : null,
       isMpesa: row['is_mpesa'] ?? false,
       notes: row['notes'],
@@ -87,20 +81,14 @@ class TransactionService {
   // ── Calculate summary from transactions ───────────────────────
   static MonthlySummary getSummary(List<Transaction> transactions) {
     final now = DateTime.now();
-    final monthTxns = transactions.where((t) =>
-        t.date.month == now.month && t.date.year == now.year).toList();
+    final monthTxns = transactions.where((t) => t.date.month == now.month && t.date.year == now.year).toList();
 
-    double income = monthTxns
-        .where((t) => t.type == TransactionType.income)
-        .fold(0, (s, t) => s + t.amount);
+    double income = monthTxns.where((t) => t.type == TransactionType.income).fold(0, (s, t) => s + t.amount);
 
-    double expenses = monthTxns
-        .where((t) => t.type == TransactionType.expense)
-        .fold(0, (s, t) => s + t.amount);
+    double expenses = monthTxns.where((t) => t.type == TransactionType.expense).fold(0, (s, t) => s + t.amount);
 
     Map<ExpenseCategory, double> byCat = {};
-    for (var t in monthTxns.where(
-        (t) => t.type == TransactionType.expense && t.category != null)) {
+    for (var t in monthTxns.where((t) => t.type == TransactionType.expense && t.category != null)) {
       byCat[t.category!] = (byCat[t.category!] ?? 0) + t.amount;
     }
 

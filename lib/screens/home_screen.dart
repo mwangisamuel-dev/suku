@@ -13,6 +13,7 @@ import '../services/transaction_service.dart';
 import 'scan_screen.dart';
 import 'add_transaction_screen.dart';
 import 'business_info_screen.dart';
+import 'invoice_list_screen.dart';
 import 'language_screen.dart';
 import 'mpesa_screen.dart';
 import 'mpesa_settings_screen.dart';
@@ -350,9 +351,12 @@ class _DashboardTab extends StatelessWidget {
                       color: SukuColors.green,
                     ),
                     QuickActionBtn(
-                      icon: Icons.picture_as_pdf_rounded,
-                      label: LanguageService.text('reportAction'),
-                      onTap: () {},
+                      icon: Icons.receipt_long_rounded,
+                      label: LanguageService.text('invoiceAction'),
+                      onTap: () async {
+                        await Navigator.push(context, MaterialPageRoute(builder: (_) => const InvoiceListScreen()));
+                        onRefresh();
+                      },
                       color: SukuColors.navy,
                     ),
                   ],

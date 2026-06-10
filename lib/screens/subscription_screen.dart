@@ -63,10 +63,14 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       return;
     }
 
-    final controller = TextEditingController();
     String selectedMethod = 'mpesa';
+    final phoneController = TextEditingController();
+    final cardNumberController = TextEditingController();
+    final expiryController = TextEditingController();
+    final cvcController = TextEditingController();
+    final nameController = TextEditingController();
 
-    await showDialog(
+    final result = await showDialog<Map<String, String>>(
       context: context,
       builder: (context) {
         return StatefulBuilder(
@@ -75,37 +79,100 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               title: Text(LanguageService.text('subscriptionPaymentTitle'),
                   style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(LanguageService.text('choosePaymentMethod'),
-                      style: GoogleFonts.plusJakartaSans(fontSize: 14, color: SukuColors.textSecondary)),
-                  const SizedBox(height: 16),
-                  RadioListTile<String>(
-                    value: 'mpesa',
-                    groupValue: selectedMethod,
-                    title: Text(LanguageService.text('mpesaPinOption')),
-                    onChanged: (value) => setState(() => selectedMethod = value ?? 'mpesa'),
-                  ),
-                  RadioListTile<String>(
-                    value: 'card',
-                    groupValue: selectedMethod,
-                    title: Text(LanguageService.text('cardPaymentOption')),
-                    onChanged: (value) => setState(() => selectedMethod = value ?? 'card'),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: controller,
-                    decoration: InputDecoration(
-                      labelText: selectedMethod == 'mpesa'
-                          ? LanguageService.text('enterMpesaPin')
-                          : LanguageService.text('enterCardDetails'),
-                      border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(14))),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(LanguageService.text('choosePaymentMethod'),
+                        style: GoogleFonts.plusJakartaSans(fontSize: 14, color: SukuColors.textSecondary)),
+                    const SizedBox(height: 16),
+                    RadioListTile<String>(
+                      value: 'mpesa',
+                      groupValue: selectedMethod,
+                      title: Text(LanguageService.text('mpesaPaymentOption')),
+                      onChanged: (value) => setState(() => selectedMethod = value ?? 'mpesa'),
                     ),
-                    obscureText: selectedMethod == 'mpesa',
-                    keyboardType: TextInputType.number,
-                  ),
-                ],
+                    RadioListTile<String>(
+                      value: 'airtel',
+                      groupValue: selectedMethod,
+                      title: Text(LanguageService.text('airtelPaymentOption')),
+                      onChanged: (value) => setState(() => selectedMethod = value ?? 'airtel'),
+                    ),
+                    RadioListTile<String>(
+                      value: 'mtn',
+                      groupValue: selectedMethod,
+                      title: Text(LanguageService.text('mtnPaymentOption')),
+                      onChanged: (value) => setState(() => selectedMethod = value ?? 'mtn'),
+                    ),
+                    RadioListTile<String>(
+                      value: 'card',
+                      groupValue: selectedMethod,
+                      title: Text(LanguageService.text('cardPaymentOption')),
+                      onChanged: (value) => setState(() => selectedMethod = value ?? 'card'),
+                    ),
+                    const SizedBox(height: 12),
+                    if (selectedMethod != 'card') ...[
+                      TextField(
+                        controller: phoneController,
+                        decoration: InputDecoration(
+                          labelText: LanguageService.text('enterPhoneNumber'),
+                          hintText: LanguageService.text('phoneNumberHint'),
+                          border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(14))),
+                        ),
+                        keyboardType: TextInputType.phone,
+                      ),
+                    ] else ...[
+                      TextField(
+                        controller: cardNumberController,
+                        decoration: InputDecoration(
+                          labelText: LanguageService.text('cardNumber'),
+                          hintText: LanguageService.text('cardNumberHint'),
+                          border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(14))),
+                        ),
+                        keyboardType: TextInputType.number,
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: expiryController,
+                              decoration: InputDecoration(
+                                labelText: LanguageService.text('cardExpiry'),
+                                hintText: LanguageService.text('cardExpiryHint'),
+                                border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(14))),
+                              ),
+                              keyboardType: TextInputType.datetime,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: TextField(
+                              controller: cvcController,
+                              decoration: InputDecoration(
+                                labelText: LanguageService.text('cardCvc'),
+                                hintText: LanguageService.text('cardCvcHint'),
+                                border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(14))),
+                              ),
+                              keyboardType: TextInputType.number,
+                              obscureText: true,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: nameController,
+                        decoration: InputDecoration(
+                          labelText: LanguageService.text('cardName'),
+                          hintText: LanguageService.text('cardNameHint'),
+                          border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(14))),
+                        ),
+                        keyboardType: TextInputType.name,
+                      ),
+                    ],
+                  ],
+                ),
               ),
               actions: [
                 TextButton(
@@ -118,16 +185,157 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                       backgroundColor: SukuColors.green,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
                   onPressed: () {
-                    if (controller.text.isEmpty) return;
-                    Navigator.pop(context);
-                    _processPayment(plan, selectedMethod);
+                    if (selectedMethod != 'card') {
+                      final phone = phoneController.text.trim();
+                      if (phone.isEmpty || phone.length < 9) return;
+                      Navigator.pop(context, {'method': selectedMethod, 'phone': phone});
+                    } else {
+                      final cardNumber = cardNumberController.text.trim();
+                      final expiry = expiryController.text.trim();
+                      final cvc = cvcController.text.trim();
+                      final name = nameController.text.trim();
+                      if (cardNumber.isEmpty || expiry.isEmpty || cvc.length < 3 || name.isEmpty) return;
+                      Navigator.pop(context, {
+                        'method': 'card',
+                        'cardNumber': cardNumber,
+                        'expiry': expiry,
+                        'cvc': cvc,
+                        'name': name,
+                      });
+                    }
                   },
-                  child: Text(LanguageService.text('payButton'),
+                  child: Text(LanguageService.text('continueButton'),
                       style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
                 ),
               ],
             );
           },
+        );
+      },
+    );
+
+    if (result == null) return;
+    if (result['method'] == 'card') {
+      await _confirmCardPayment(
+        plan,
+        result['cardNumber']!,
+        result['expiry']!,
+        result['cvc']!,
+        result['name']!,
+      );
+      return;
+    }
+
+    await _confirmMobileMoneyPayment(plan, result['method']!, result['phone']!);
+  }
+
+  Future<void> _confirmMobileMoneyPayment(String plan, String provider, String phone) async {
+    final providerLabel = _providerLabel(provider);
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(LanguageService.text('mobileMoneyPaymentTitle'),
+              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                LanguageService.text('paymentRequestInstruction')
+                    .replaceFirst('{phone}', phone)
+                    .replaceFirst('{provider}', providerLabel),
+                style: GoogleFonts.plusJakartaSans(fontSize: 14, color: SukuColors.textSecondary),
+              ),
+              const SizedBox(height: 14),
+              Text(LanguageService.text('enterMobileMoneyPinOnPhone'),
+                  style: GoogleFonts.plusJakartaSans(fontSize: 13, color: SukuColors.textSecondary, height: 1.4)),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(LanguageService.text('cancelButton'),
+                  style: GoogleFonts.plusJakartaSans(color: SukuColors.textHint, fontWeight: FontWeight.w700)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: SukuColors.green,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+              onPressed: () {
+                Navigator.pop(context);
+                _processPayment(plan, provider);
+              },
+              child: Text(LanguageService.text('confirmButton'),
+                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  String _providerLabel(String provider) {
+    switch (provider) {
+      case 'airtel':
+        return LanguageService.text('airtelPaymentOption');
+      case 'mtn':
+        return LanguageService.text('mtnPaymentOption');
+      default:
+        return LanguageService.text('mpesaPaymentOption');
+    }
+  }
+
+  Future<void> _confirmCardPayment(
+    String plan,
+    String cardNumber,
+    String expiry,
+    String cvc,
+    String name,
+  ) async {
+    await showDialog(
+      context: context,
+      builder: (context) {
+        final maskedNumber =
+            cardNumber.length >= 4 ? '**** **** **** ${cardNumber.substring(cardNumber.length - 4)}' : cardNumber;
+
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(LanguageService.text('cardPaymentSummaryTitle'),
+              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('${LanguageService.text('cardNumber')}: $maskedNumber',
+                  style: GoogleFonts.plusJakartaSans(fontSize: 14, color: SukuColors.textSecondary)),
+              const SizedBox(height: 8),
+              Text('${LanguageService.text('cardExpiry')}: $expiry',
+                  style: GoogleFonts.plusJakartaSans(fontSize: 14, color: SukuColors.textSecondary)),
+              const SizedBox(height: 8),
+              Text('${LanguageService.text('cardName')}: $name',
+                  style: GoogleFonts.plusJakartaSans(fontSize: 14, color: SukuColors.textSecondary)),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(LanguageService.text('cancelButton'),
+                  style: GoogleFonts.plusJakartaSans(color: SukuColors.textHint, fontWeight: FontWeight.w700)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: SukuColors.green,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+              onPressed: () {
+                Navigator.pop(context);
+                _processPayment(plan, 'card');
+              },
+              child: Text(LanguageService.text('confirmButton'),
+                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+            ),
+          ],
         );
       },
     );

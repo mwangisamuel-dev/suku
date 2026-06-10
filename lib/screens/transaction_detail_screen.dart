@@ -460,7 +460,10 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                               height: 18,
                               child: CircularProgressIndicator(strokeWidth: 2, color: SukuColors.error))
                           : const Icon(Icons.delete_outline_rounded, color: SukuColors.error),
-                      label: Text(_deleting ? 'Deleting...' : 'Delete Transaction',
+                      label: Text(
+                          _deleting
+                              ? LanguageService.text('deletingTransaction')
+                              : LanguageService.text('deleteTransactionButton'),
                           style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: SukuColors.error)),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: SukuColors.error,

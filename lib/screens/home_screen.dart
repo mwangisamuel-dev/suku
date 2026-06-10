@@ -739,8 +739,8 @@ class _BalanceCard extends StatelessWidget {
                 ),
                 child: Text(
                   summary.totalIncome > 0
-                      ? '${summary.profitMargin.toStringAsFixed(1)}% margin  •  Biashara safi ✓'
-                      : 'Anza kurekodi miamala yako',
+                      ? '${summary.profitMargin.toStringAsFixed(1)}% margin  •  ${LanguageService.text('businessClean')}'
+                      : LanguageService.text('startRecordingTransactions'),
                   style: GoogleFonts.plusJakartaSans(
                       fontSize: 12, color: SukuColors.greenLight, fontWeight: FontWeight.w600),
                 ),
@@ -749,7 +749,7 @@ class _BalanceCard extends StatelessWidget {
               Row(
                 children: [
                   _MiniStat(
-                      label: 'Money In',
+                      label: LanguageService.text('moneyIn'),
                       value: visible ? 'Ksh ${NumberFormat('#,##0').format(summary.totalIncome)}' : '••••',
                       color: SukuColors.greenLight),
                   Container(
@@ -758,7 +758,7 @@ class _BalanceCard extends StatelessWidget {
                       height: 32,
                       color: Colors.white.withOpacity(0.15)),
                   _MiniStat(
-                      label: 'Money Out',
+                      label: LanguageService.text('moneyOut'),
                       value: visible ? 'Ksh ${NumberFormat('#,##0').format(summary.totalExpenses)}' : '••••',
                       color: SukuColors.orangeLight),
                 ],

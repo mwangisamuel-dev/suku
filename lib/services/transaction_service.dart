@@ -21,7 +21,7 @@ class TransactionService {
     try {
       String? storedPath = receiptImagePath;
       if (receiptImagePath != null) {
-        final moved = await StorageService.moveReceiptToAppDir(receiptImagePath!);
+        final moved = await StorageService.moveReceiptToAppDir(receiptImagePath);
         if (moved != null) storedPath = moved;
       }
 

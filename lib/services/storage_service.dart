@@ -65,10 +65,7 @@ class StorageService {
   static Future<void> pruneReceipts({int maxTotalMB = 50}) async {
     final receipts = await _receiptsDir();
     if (!receipts.existsSync()) return;
-    final files = receipts
-        .listSync()
-        .whereType<File>()
-        .toList()
+    final files = receipts.listSync().whereType<File>().toList()
       ..sort((a, b) => a.lastModifiedSync().compareTo(b.lastModifiedSync()));
 
     int totalBytes = files.fold(0, (s, f) => s + f.lengthSync());

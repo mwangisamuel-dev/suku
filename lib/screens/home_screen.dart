@@ -1399,32 +1399,38 @@ class _SettingsTabState extends State<_SettingsTab> {
                           double? sizeMB;
                           bool clearing = false;
 
-                          Future<void> _refreshSize() async {
+                          Future<void> refreshSize() async {
                             final s = await StorageService.getCacheSizeMB();
                             if (mounted) setState(() => sizeMB = s);
                           }
 
-                          _refreshSize();
+                          refreshSize();
 
                           return AlertDialog(
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                            title: Text(LanguageService.text('settingsStorage'), style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+                            title: Text(LanguageService.text('settingsStorage'),
+                                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
                             content: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 if (sizeMB == null)
                                   const SizedBox(height: 48, child: Center(child: CircularProgressIndicator()))
                                 else ...[
-                                  Text(LanguageService.text('storageUsed').replaceFirst('{size}', sizeMB!.toStringAsFixed(2)), style: GoogleFonts.plusJakartaSans(color: SukuColors.textSecondary)),
+                                  Text(
+                                      LanguageService.text('storageUsed')
+                                          .replaceFirst('{size}', sizeMB!.toStringAsFixed(2)),
+                                      style: GoogleFonts.plusJakartaSans(color: SukuColors.textSecondary)),
                                   const SizedBox(height: 12),
-                                  Text(LanguageService.text('clearCache'), style: GoogleFonts.plusJakartaSans(fontSize: 13, color: SukuColors.textPrimary)),
+                                  Text(LanguageService.text('clearCache'),
+                                      style: GoogleFonts.plusJakartaSans(fontSize: 13, color: SukuColors.textPrimary)),
                                 ],
                               ],
                             ),
                             actions: [
                               TextButton(
                                 onPressed: clearing ? null : () => Navigator.pop(context),
-                                child: Text(LanguageService.text('cancelButton'), style: GoogleFonts.plusJakartaSans(color: SukuColors.textSecondary)),
+                                child: Text(LanguageService.text('cancelButton'),
+                                    style: GoogleFonts.plusJakartaSans(color: SukuColors.textSecondary)),
                               ),
                               ElevatedButton(
                                 onPressed: (clearing || sizeMB == null)
@@ -1433,18 +1439,25 @@ class _SettingsTabState extends State<_SettingsTab> {
                                         setState(() => clearing = true);
                                         await StorageService.clearTemporaryCache();
                                         await StorageService.pruneReceipts(maxTotalMB: 50);
-                                        await _refreshSize();
+                                        await refreshSize();
                                         setState(() => clearing = false);
                                         if (mounted) {
                                           Navigator.pop(context);
                                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                            content: Text(LanguageService.text('cacheCleared'), style: GoogleFonts.plusJakartaSans(color: Colors.white)),
+                                            content: Text(LanguageService.text('cacheCleared'),
+                                                style: GoogleFonts.plusJakartaSans(color: Colors.white)),
                                             backgroundColor: SukuColors.green,
                                           ));
                                         }
                                       },
                                 style: ElevatedButton.styleFrom(backgroundColor: SukuColors.green, elevation: 0),
-                                child: clearing ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : Text(LanguageService.text('clearCache'), style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+                                child: clearing
+                                    ? const SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                    : Text(LanguageService.text('clearCache'),
+                                        style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
                               ),
                             ],
                           );

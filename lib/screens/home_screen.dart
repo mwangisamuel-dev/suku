@@ -11,7 +11,12 @@ import '../services/auth_service.dart';
 import '../services/transaction_service.dart';
 import 'scan_screen.dart';
 import 'add_transaction_screen.dart';
+import 'business_info_screen.dart';
+import 'language_screen.dart';
 import 'mpesa_screen.dart';
+import 'mpesa_settings_screen.dart';
+import 'notifications_screen.dart';
+import 'help_support_screen.dart';
 import 'transaction_detail_screen.dart';
 import 'phone_screen.dart';
 import '../services/sms_service.dart';
@@ -1220,16 +1225,35 @@ class _SettingsTabState extends State<_SettingsTab> {
                 ),
                 const SizedBox(height: 20),
                 _SettingsRow(
-                    label: 'Subscription Plan', icon: Icons.star_rounded, color: SukuColors.orange, onTap: () {}),
+                    label: 'Subscription Plan', icon: Icons.star_rounded, color: SukuColors.orange, onTap: () async {
+                      await Navigator.push(context,
+                          MaterialPageRoute(builder: (_) => const SubscriptionScreen()));
+                    }),
                 _SettingsRow(
-                    label: 'M-Pesa Settings', icon: Icons.phone_android_rounded, color: SukuColors.green, onTap: () {}),
-                _SettingsRow(label: 'Business Info', icon: Icons.store_rounded, color: SukuColors.navy, onTap: () {}),
+                    label: 'M-Pesa Settings', icon: Icons.phone_android_rounded, color: SukuColors.green, onTap: () async {
+                      await Navigator.push(context,
+                          MaterialPageRoute(builder: (_) => const MpesaSettingsScreen()));
+                    }),
+                _SettingsRow(label: 'Business Info', icon: Icons.store_rounded, color: SukuColors.navy, onTap: () async {
+                      await Navigator.push(context,
+                          MaterialPageRoute(builder: (_) => const BusinessInfoScreen()));
+                      _load();
+                    }),
                 _SettingsRow(
-                    label: 'Notifications', icon: Icons.notifications_rounded, color: SukuColors.info, onTap: () {}),
+                    label: 'Notifications', icon: Icons.notifications_rounded, color: SukuColors.info, onTap: () async {
+                      await Navigator.push(context,
+                          MaterialPageRoute(builder: (_) => const NotificationsScreen()));
+                    }),
                 _SettingsRow(
-                    label: 'Language / Lugha', icon: Icons.language_rounded, color: SukuColors.catStock, onTap: () {}),
+                    label: 'Language / Lugha', icon: Icons.language_rounded, color: SukuColors.catStock, onTap: () async {
+                      await Navigator.push(context,
+                          MaterialPageRoute(builder: (_) => const LanguageScreen()));
+                    }),
                 _SettingsRow(
-                    label: 'Help & Support', icon: Icons.help_rounded, color: SukuColors.catRent, onTap: () {}),
+                    label: 'Help & Support', icon: Icons.help_rounded, color: SukuColors.catRent, onTap: () async {
+                      await Navigator.push(context,
+                          MaterialPageRoute(builder: (_) => const HelpSupportScreen()));
+                    }),
                 _SettingsRow(
                   label: 'Sign Out',
                   icon: Icons.logout_rounded,

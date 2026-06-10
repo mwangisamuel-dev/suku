@@ -185,7 +185,7 @@ class SmsService {
       cat = ExpenseCategory.transport;
     }
 
-//lets try this
+//lets try this again and again till it works
     return {
       'amount': amount,
       'type': isIncome ? TransactionType.income : TransactionType.expense,

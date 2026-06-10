@@ -106,6 +106,8 @@ class LanguageService {
       'categoryLabel': 'Category',
       'notesLabel': 'Notes',
       'transactionIdLabel': 'Transaction ID',
+      'businessClean': 'Clean business',
+      'startRecordingTransactions': 'Start recording your transactions',
       'moneyIn': 'Money In',
       'moneyOut': 'Money Out',
       'all': 'All',

@@ -44,7 +44,8 @@ class _InvoiceListScreenState extends State<InvoiceListScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Failed to share invoice', style: GoogleFonts.plusJakartaSans(color: Colors.white)),
+        content:
+            Text(LanguageService.text('invoiceShareError'), style: GoogleFonts.plusJakartaSans(color: Colors.white)),
         backgroundColor: SukuColors.error,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -61,7 +62,8 @@ class _InvoiceListScreenState extends State<InvoiceListScreen> {
       final file = await PdfService.generateInvoice(transaction: transaction);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Saved invoice to ${file.path}', style: GoogleFonts.plusJakartaSans(color: Colors.white)),
+        content: Text('${LanguageService.text('invoiceSavedTo')} ${file.path}',
+            style: GoogleFonts.plusJakartaSans(color: Colors.white)),
         backgroundColor: SukuColors.green,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -70,7 +72,8 @@ class _InvoiceListScreenState extends State<InvoiceListScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Failed to save invoice', style: GoogleFonts.plusJakartaSans(color: Colors.white)),
+        content:
+            Text(LanguageService.text('invoiceSaveError'), style: GoogleFonts.plusJakartaSans(color: Colors.white)),
         backgroundColor: SukuColors.error,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -147,6 +150,9 @@ class _InvoiceListScreenState extends State<InvoiceListScreen> {
                                     Text(DateFormat('d MMM yyyy').format(transaction.date),
                                         style:
                                             GoogleFonts.plusJakartaSans(fontSize: 12, color: SukuColors.textSecondary)),
+                                    if (transaction.category != null)
+                                      Text(transaction.category!.label,
+                                          style: GoogleFonts.plusJakartaSans(fontSize: 12, color: SukuColors.textHint)),
                                   ],
                                 ),
                               ),

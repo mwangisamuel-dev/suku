@@ -279,13 +279,13 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                       children: [
                         _detailRow(
                           icon: Icons.store_rounded,
-                          label: 'Vendor',
+                          label: LanguageService.text('vendorLabel'),
                           value: t.vendor ?? 'N/A',
                         ),
                         const Divider(height: 24, color: SukuColors.border),
                         _detailRow(
                           icon: Icons.calendar_today_rounded,
-                          label: 'Date & Time',
+                          label: LanguageService.text('dateTimeLabel'),
                           value: DateFormat('EEEE, d MMMM yyyy · HH:mm').format(t.date),
                         ),
                         if (t.category != null) ...[
@@ -305,7 +305,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('Category',
+                                    Text(LanguageService.text('categoryLabel'),
                                         style:
                                             GoogleFonts.plusJakartaSans(fontSize: 12, color: SukuColors.textSecondary)),
                                     const SizedBox(height: 4),
@@ -320,14 +320,14 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                           const Divider(height: 24, color: SukuColors.border),
                           _detailRow(
                             icon: Icons.notes_rounded,
-                            label: 'Notes',
+                            label: LanguageService.text('notesLabel'),
                             value: t.notes!,
                           ),
                         ],
                         const Divider(height: 24, color: SukuColors.border),
                         _detailRow(
                           icon: Icons.tag_rounded,
-                          label: 'Transaction ID',
+                          label: LanguageService.text('transactionIdLabel'),
                           value: '#${t.id.substring(0, 8).toUpperCase()}',
                         ),
                         const Divider(height: 24, color: SukuColors.border),

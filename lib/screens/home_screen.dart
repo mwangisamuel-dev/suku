@@ -100,6 +100,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
                 _TransactionsTab(
                   transactions: _transactions,
+                  balanceVisible: _balanceVisible,
                   onRefresh: _loadData,
                 ),
                 const SizedBox(),
@@ -359,6 +360,7 @@ class _DashboardTab extends StatelessWidget {
                       child: StatCard(
                         label: 'Money In',
                         amount: summary.totalIncome,
+                        visible: balanceVisible,
                         color: SukuColors.green,
                         icon: Icons.trending_up_rounded,
                         change: null,
@@ -369,6 +371,7 @@ class _DashboardTab extends StatelessWidget {
                       child: StatCard(
                         label: 'Money Out',
                         amount: summary.totalExpenses,
+                        visible: balanceVisible,
                         color: SukuColors.error,
                         icon: Icons.trending_down_rounded,
                         change: null,
@@ -877,9 +880,10 @@ class _CategoryBreakdown extends StatelessWidget {
 // ─── Transactions Tab ──────────────────────────────────────────────────────────
 class _TransactionsTab extends StatefulWidget {
   final List<Transaction> transactions;
+  final bool balanceVisible;
   final VoidCallback onRefresh;
 
-  const _TransactionsTab({required this.transactions, required this.onRefresh});
+  const _TransactionsTab({required this.transactions, required this.balanceVisible, required this.onRefresh});
 
   @override
   State<_TransactionsTab> createState() => _TransactionsTabState();

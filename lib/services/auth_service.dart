@@ -104,6 +104,65 @@ class AuthService {
     await prefs.setBool('profile_complete', true);
   }
 
+  static Future<void> saveProfile({
+    required String accountType,
+    String? businessName,
+    String? businessLocation,
+    String? businessType,
+    String? personalName,
+    String? personalLocation,
+    String? occupation,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('account_type', accountType);
+    if (accountType == 'business') {
+      if (businessName != null) await prefs.setString('business_name', businessName);
+      if (businessLocation != null) await prefs.setString('location', businessLocation);
+      if (businessType != null) await prefs.setString('business_type', businessType);
+      await prefs.setBool('profile_complete', true);
+      final user = currentUser;
+      if (user != null) {
+        try {
+          await _supabase.from('profiles').upsert({
+            'id': user.id,
+            'phone': user.phone,
+            'business_name': businessName,
+            'location': businessLocation,
+            'business_type': businessType,
+            'created_at': DateTime.now().toIso8601String(),
+          });
+        } catch (e) {
+          // silently fail
+        }
+      }
+    } else {
+      if (personalName != null) await prefs.setString('personal_name', personalName);
+      if (personalLocation != null) await prefs.setString('personal_location', personalLocation);
+      if (occupation != null) await prefs.setString('occupation', occupation);
+      await prefs.setBool('profile_complete', true);
+    }
+  }
+
+  static Future<String> getAccountType() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('account_type') ?? 'business';
+  }
+
+  static Future<String> getPersonalName() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('personal_name') ?? '';
+  }
+
+  static Future<String> getPersonalLocation() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('personal_location') ?? '';
+  }
+
+  static Future<String> getOccupation() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('occupation') ?? '';
+  }
+
   static Future<bool> isProfileComplete() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool('profile_complete') ?? false;

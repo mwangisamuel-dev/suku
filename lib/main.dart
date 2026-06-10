@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config/supabase_config.dart';
+import 'services/language_service.dart';
 import 'theme/suku_theme.dart';
 import 'screens/splash_screen.dart';
 import 'services/sms_service.dart';
@@ -13,6 +14,8 @@ void main() async {
     url: SupabaseConfig.supabaseUrl,
     anonKey: SupabaseConfig.supabaseAnonKey,
   );
+
+  await LanguageService.init();
 
   // Initialize notifications
   await SmsService.init();

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/language_service.dart';
 import '../theme/suku_theme.dart';
 
 class LanguageScreen extends StatefulWidget {
@@ -21,25 +22,31 @@ class _LanguageScreenState extends State<LanguageScreen> {
   }
 
   Future<void> _loadLanguage() async {
-    final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _language = prefs.getString('app_language') ?? 'English';
+      _language = LanguageService.current;
       _loading = false;
     });
   }
 
   Future<void> _saveLanguage(String language) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('app_language', language);
+    await LanguageService.setLanguage(language);
     if (!mounted) return;
     setState(() => _language = language);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('$language selected', style: GoogleFonts.plusJakartaSans(color: Colors.white)),
-      backgroundColor: SukuColors.green,
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      margin: const EdgeInsets.all(16),
-    ));
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(LanguageService.text('languageTitle'), style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+        content: Text(LanguageService.switchLanguageMessage(language),
+            style: GoogleFonts.plusJakartaSans(fontSize: 14, color: SukuColors.textSecondary)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK', style: GoogleFonts.plusJakartaSans(color: SukuColors.green, fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -56,7 +63,7 @@ class _LanguageScreenState extends State<LanguageScreen> {
                 children: [
                   const BackButton(color: SukuColors.textPrimary),
                   const SizedBox(width: 8),
-                  Text('Language / Lugha',
+                  Text(LanguageService.text('languageTitle'),
                       style: GoogleFonts.plusJakartaSans(
                           fontSize: 24,
                           fontWeight: FontWeight.w800,
@@ -65,7 +72,7 @@ class _LanguageScreenState extends State<LanguageScreen> {
                 ],
               ),
               const SizedBox(height: 20),
-              Text('Pick your preferred app language. This is stored locally for your device.',
+              Text(LanguageService.text('languageDescription'),
                   style: GoogleFonts.plusJakartaSans(fontSize: 14, color: SukuColors.textSecondary, height: 1.5)),
               const SizedBox(height: 24),
               if (_loading)

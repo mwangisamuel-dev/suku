@@ -8,6 +8,7 @@ import '../theme/suku_theme.dart';
 import '../models/models.dart';
 import '../widgets/shared_widgets.dart';
 import '../services/auth_service.dart';
+import '../services/language_service.dart';
 import '../services/transaction_service.dart';
 import 'scan_screen.dart';
 import 'add_transaction_screen.dart';
@@ -1146,6 +1147,7 @@ class _SettingsTab extends StatefulWidget {
 class _SettingsTabState extends State<_SettingsTab> {
   String _businessName = '';
   String _location = '';
+  String _accountType = 'business';
 
   @override
   void initState() {
@@ -1156,8 +1158,14 @@ class _SettingsTabState extends State<_SettingsTab> {
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _businessName = prefs.getString('business_name') ?? 'My Business';
-      _location = prefs.getString('location') ?? 'Nairobi, Kenya';
+      _accountType = prefs.getString('account_type') ?? 'business';
+      if (_accountType == 'personal') {
+        _businessName = prefs.getString('personal_name') ?? 'My Account';
+        _location = prefs.getString('personal_location') ?? 'Nairobi, Kenya';
+      } else {
+        _businessName = prefs.getString('business_name') ?? 'My Business';
+        _location = prefs.getString('location') ?? 'Nairobi, Kenya';
+      }
     });
   }
 
@@ -1171,7 +1179,7 @@ class _SettingsTabState extends State<_SettingsTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Akaunti',
+                Text(LanguageService.text('accountTitle'),
                     style: GoogleFonts.plusJakartaSans(
                         fontSize: 24, fontWeight: FontWeight.w800, color: SukuColors.textPrimary, letterSpacing: -0.5)),
                 const SizedBox(height: 24),
@@ -1217,7 +1225,9 @@ class _SettingsTabState extends State<_SettingsTab> {
                           color: SukuColors.green.withOpacity(0.12),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Text('Business',
+                        child: Text(_accountType == 'personal'
+                            ? LanguageService.text('businessBadgePersonal')
+                            : LanguageService.text('businessBadgeBusiness'),
                             style: GoogleFonts.plusJakartaSans(
                                 fontSize: 12, fontWeight: FontWeight.w700, color: SukuColors.green)),
                       ),
@@ -1226,21 +1236,21 @@ class _SettingsTabState extends State<_SettingsTab> {
                 ),
                 const SizedBox(height: 20),
                 _SettingsRow(
-                    label: 'Subscription Plan',
+                    label: LanguageService.text('settingsSubscription'),
                     icon: Icons.star_rounded,
                     color: SukuColors.orange,
                     onTap: () async {
                       await Navigator.push(context, MaterialPageRoute(builder: (_) => const SubscriptionScreen()));
                     }),
                 _SettingsRow(
-                    label: 'M-Pesa Settings',
+                    label: LanguageService.text('settingsMpesa'),
                     icon: Icons.phone_android_rounded,
                     color: SukuColors.green,
                     onTap: () async {
                       await Navigator.push(context, MaterialPageRoute(builder: (_) => const MpesaSettingsScreen()));
                     }),
                 _SettingsRow(
-                    label: 'Business Info',
+                    label: LanguageService.text('settingsBusinessInfo'),
                     icon: Icons.store_rounded,
                     color: SukuColors.navy,
                     onTap: () async {
@@ -1248,21 +1258,21 @@ class _SettingsTabState extends State<_SettingsTab> {
                       _load();
                     }),
                 _SettingsRow(
-                    label: 'Notifications',
+                    label: LanguageService.text('settingsNotifications'),
                     icon: Icons.notifications_rounded,
                     color: SukuColors.info,
                     onTap: () async {
                       await Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()));
                     }),
                 _SettingsRow(
-                    label: 'Language / Lugha',
+                    label: LanguageService.text('settingsLanguage'),
                     icon: Icons.language_rounded,
                     color: SukuColors.catStock,
                     onTap: () async {
                       await Navigator.push(context, MaterialPageRoute(builder: (_) => const LanguageScreen()));
                     }),
                 _SettingsRow(
-                    label: 'Help & Support',
+                    label: LanguageService.text('settingsHelpSupport'),
                     icon: Icons.help_rounded,
                     color: SukuColors.catRent,
                     onTap: () async {

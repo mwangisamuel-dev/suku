@@ -17,7 +17,6 @@ class PdfService {
     final prefs = await SharedPreferences.getInstance();
     final businessName = prefs.getString('business_name') ?? 'My Business';
     final location = prefs.getString('location') ?? 'Kenya';
-    final businessType = prefs.getString('business_type') ?? 'Business';
 
     final pdf = pw.Document();
     final monthLabel = DateFormat('MMMM yyyy').format(month);

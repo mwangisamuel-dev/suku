@@ -15,6 +15,8 @@ class BusinessInfoScreen extends StatefulWidget {
 class _BusinessInfoScreenState extends State<BusinessInfoScreen> {
   final _nameController = TextEditingController();
   final _locationController = TextEditingController();
+  final _occupationController = TextEditingController();
+  final String _accountType = 'business';
   String? _selectedType;
   bool _loading = true;
   bool _saving = false;

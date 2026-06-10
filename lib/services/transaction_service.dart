@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/models.dart';
+import 'storage_service.dart';
 
 class TransactionService {
   static final _supabase = Supabase.instance.client;
@@ -18,6 +19,12 @@ class TransactionService {
     String? receiptImagePath,
   }) async {
     try {
+      String? storedPath = receiptImagePath;
+      if (receiptImagePath != null) {
+        final moved = await StorageService.moveReceiptToAppDir(receiptImagePath!);
+        if (moved != null) storedPath = moved;
+      }
+
       await _supabase.from('transactions').insert({
         'user_id': _userId,
         'title': title,
@@ -27,7 +34,7 @@ class TransactionService {
         'category': category?.name,
         'is_mpesa': isMpesa,
         'notes': notes,
-        'receipt_image_path': receiptImagePath,
+        'receipt_image_path': storedPath,
         'created_at': DateTime.now().toIso8601String(),
       });
       return true;
@@ -74,6 +81,7 @@ class TransactionService {
           : null,
       isMpesa: row['is_mpesa'] ?? false,
       notes: row['notes'],
+      receiptImagePath: row['receipt_image_path'],
       date: DateTime.parse(row['created_at']),
     );
   }

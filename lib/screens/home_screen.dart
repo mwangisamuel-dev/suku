@@ -100,7 +100,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
                 _TransactionsTab(
                   transactions: _transactions,
-                  balanceVisible: _balanceVisible,
                   onRefresh: _loadData,
                 ),
                 const SizedBox(),
@@ -359,8 +358,7 @@ class _DashboardTab extends StatelessWidget {
                     Expanded(
                       child: StatCard(
                         label: 'Money In',
-                        amount: summary.totalIncome,
-                        visible: balanceVisible,
+                        amount: balanceVisible ? summary.totalIncome : -1,
                         color: SukuColors.green,
                         icon: Icons.trending_up_rounded,
                         change: null,
@@ -370,8 +368,7 @@ class _DashboardTab extends StatelessWidget {
                     Expanded(
                       child: StatCard(
                         label: 'Money Out',
-                        amount: summary.totalExpenses,
-                        visible: balanceVisible,
+                        amount: balanceVisible ? summary.totalExpenses : -1,
                         color: SukuColors.error,
                         icon: Icons.trending_down_rounded,
                         change: null,
@@ -428,8 +425,9 @@ class _DashboardTab extends StatelessWidget {
                 )
               : SliverList(
                   delegate: SliverChildBuilderDelegate(
-                    (_, i) => TransactionTile(
+                    (_, i) => _DashboardTransactionTile(
                       transaction: transactions[i],
+                      visible: balanceVisible,
                       onTap: () async {
                         final result = await Navigator.push(context,
                             MaterialPageRoute(builder: (_) => TransactionDetailScreen(transaction: transactions[i])));
@@ -442,6 +440,127 @@ class _DashboardTab extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+class _DashboardTransactionTile extends StatelessWidget {
+  final Transaction transaction;
+  final bool visible;
+  final VoidCallback? onTap;
+
+  const _DashboardTransactionTile({super.key, required this.transaction, required this.visible, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final isIncome = transaction.type == TransactionType.income;
+    final timeAgo = _timeAgo(transaction.date);
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: SukuColors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: SukuColors.border),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                color: isIncome
+                    ? SukuColors.greenSurface
+                    : (transaction.category?.color ?? SukuColors.textHint).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Center(
+                child: Icon(
+                  isIncome ? Icons.trending_up_rounded : (transaction.category?.icon ?? Icons.receipt_rounded),
+                  color: isIncome ? SukuColors.green : (transaction.category?.color ?? SukuColors.textHint),
+                  size: 22,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          transaction.title,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: SukuColors.textPrimary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (transaction.isMpesa)
+                        Container(
+                          margin: const EdgeInsets.only(left: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: SukuColors.green.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'M-Pesa',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: SukuColors.green,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Row(
+                    children: [
+                      if (transaction.category != null) ...[
+                        CategoryBadge(category: transaction.category!, compact: true),
+                        const SizedBox(width: 6),
+                      ],
+                      Text(
+                        timeAgo,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 11,
+                          color: SukuColors.textHint,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              visible ? '${isIncome ? '+' : '-'} Ksh ${NumberFormat('#,##0').format(transaction.amount)}' : '••••',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: isIncome ? SukuColors.green : SukuColors.error,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _timeAgo(DateTime date) {
+    final diff = DateTime.now().difference(date);
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    if (diff.inDays == 1) return 'Yesterday';
+    return DateFormat('d MMM').format(date);
   }
 }
 

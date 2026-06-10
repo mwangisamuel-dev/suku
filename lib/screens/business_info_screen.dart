@@ -189,10 +189,7 @@ class _BusinessInfoScreenState extends State<BusinessInfoScreen> {
                                 style: GoogleFonts.plusJakartaSans(
                                     color: selected ? Colors.white : SukuColors.textPrimary)),
                             selected: selected,
-                            onSelected: (_) => setState(() {
-                              _accountType = value;
-                              _selectedType = null;
-                            }),
+                            onSelected: (_) => _updateAccountType(value),
                             selectedColor: SukuColors.green,
                             backgroundColor: SukuColors.surface,
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),

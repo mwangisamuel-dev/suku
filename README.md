@@ -1,182 +1,173 @@
-# 🟢 Suku — Your Pocket Accountant
+# 🟢 Suku — MVP Bookkeeping for SMEs
 
-**SME Bookkeeping App for East Africa**  
-Built with Flutter · Powered by Claude AI · Designed for Nairobi
+**A simple bookkeeping app for small businesses and personal accounts in East Africa.**
+Built with Flutter, local persistence, and a clean theme that stays close to the original Suku flow.
 
 ---
 
-## Project Structure
+## What this app does
+
+Suku gives users a minimal, functional bookkeeping experience with:
+
+- Dashboard-style financial overview for income, expenses, and transaction history
+- Transaction scanning / receipt capture flow
+- Monthly report generation with PDF export and share support
+- Business / personal profile setup with account type toggle
+- Subscription plan selection for Free, Pro, and Business tiers
+- Language toggle between English and Kiswahili for UI copy
+- M-Pesa settings screen, notification preferences, and help/support links
+
+This MVP is designed to preserve the app's current brand, visual flow, and layout while adding functional settings and profile persistence.
+
+---
+
+## Key features
+
+- **Business & Personal account mode**
+  - Users can choose either a business profile or a personal profile
+  - Business flow stores business name, location, and category
+  - Personal flow stores full name, location, and occupation
+- **Language support**
+  - App text switches between English and Kiswahili
+  - Language selection persists across sessions
+  - Confirmation popups appear after changing language or plan
+- **Subscription plan selector**
+  - Free, Pro, and Business plan cards
+  - Monthly pricing shown clearly in the UI
+  - Local plan persistence with selection feedback popup
+- **Reports**
+  - Monthly summary and profit/loss view
+  - PDF generation and share action
+- **Settings hub**
+  - Business info, M-Pesa connections, notification preferences, language, and support
+  - Consistent theme, button styles, and navigation flow
+
+---
+
+## Project structure
 
 ```
 suku/
 ├── lib/
-│   ├── main.dart                    # App entry point
-│   ├── theme/
-│   │   └── suku_theme.dart          # Brand colors, typography, component themes
+│   ├── main.dart
+│   ├── config/
+│   │   └── supabase_config.dart
 │   ├── models/
-│   │   └── models.dart              # Transaction, Category, SampleData
-│   ├── widgets/
-│   │   └── shared_widgets.dart      # Reusable UI components
-│   └── screens/
-│       ├── splash_screen.dart       # Animated launch screen
-│       ├── onboarding_screen.dart   # 3-slide intro (English + Swahili)
-│       ├── home_screen.dart         # Dashboard + all tabs
-│       └── scan_screen.dart         # Camera UI + AI receipt scanner
+│   │   └── models.dart
+│   ├── screens/
+│   │   ├── add_transaction_screen.dart
+│   │   ├── business_info_screen.dart
+│   │   ├── help_support_screen.dart
+│   │   ├── home_screen.dart
+│   │   ├── language_screen.dart
+│   │   ├── login_screen.dart
+│   │   ├── mpesa_settings_screen.dart
+│   │   ├── notifications_screen.dart
+│   │   ├── onboarding_screen.dart
+│   │   ├── otp_screen.dart
+│   │   ├── pin_lock_screen.dart
+│   │   ├── reports_screen.dart
+│   │   ├── scan_screen.dart
+│   │   └── splash_screen.dart
+│   ├── services/
+│   │   ├── auth_service.dart
+│   │   ├── language_service.dart
+│   │   ├── pdf_service.dart
+│   │   ├── sms_service.dart
+│   │   ├── transaction_service.dart
+│   │   └── pin_service.dart
+│   ├── theme/
+│   │   └── suku_theme.dart
+│   └── widgets/
+│       ├── keypad.dart
+│       └── shared_widgets.dart
 ├── assets/
 │   └── images/
-│       ├── icon.png                 # App icon (sukufavicon.png)
-│       └── logo.png                 # Full logo (sukunobglogo.png)
+├── android/
+├── ios/
 └── pubspec.yaml
 ```
 
 ---
 
-## 🚀 Setup & Run
+## Setup & run
 
-### 1. Prerequisites
-```bash
-flutter --version   # Needs Flutter 3.x+
-```
+### 1. Install Flutter and dependencies
 
-### 2. Install dependencies
 ```bash
-cd suku
+flutter --version
+cd e:/projects/flutter/suku
 flutter pub get
 ```
 
-### 3. Generate launcher icons (custom Suku icon)
+### 2. Run the app
+
 ```bash
-flutter pub run flutter_launcher_icons
+flutter run
 ```
-This replaces the default Flutter icon on your phone with the Suku icon.  
-✅ Both Android (adaptive) and iOS icons are generated automatically.
 
-### 4. Run the app
+### 3. Run on Android
+
 ```bash
-flutter run                    # Default device
-flutter run -d android         # Android
-flutter run -d ios             # iOS (Mac only)
+flutter run -d android
 ```
 
 ---
 
-## 🎨 Brand System
+## Screens and experience
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| `SukuColors.green` | `#00A859` | Primary actions, income, success |
-| `SukuColors.navy` | `#102A43` | Background, cards, headers |
-| `SukuColors.orange` | `#FF6B35` | FAB, scan CTA, accent |
-| Font | Plus Jakarta Sans | All text |
+### Home / Dashboard
 
----
+- Balance summary, recent transactions, and account overview
+- Settings tab with easy navigation to subscription, profile, language, and support
 
-## 📱 Screens
+### Business Info
 
-1. **Splash** — Animated logo reveal with navy background + green glow
-2. **Onboarding** — 3 slides with English copy + Swahili/Sheng tag  
-3. **Dashboard** — Balance card, weekly chart, category breakdown, recent transactions
-4. **Transactions** — Full list with filter chips (Yote / Money In / Money Out)
-5. **Scanner** — Camera viewfinder with corner accents, AI scan animation, results sheet
-6. **Reports** — KRA PDF generator + monthly summary
-7. **Profile/Settings** — Business info, subscription, M-Pesa config
+- Toggle between Business and Personal account mode
+- Save profile fields locally and use them across the app
+- Keeps the original theme and layout intact
 
----
+### Language selection
 
-## 🤖 Integrating Claude API (Receipt Scanning)
+- Toggle English / Kiswahili
+- App copy updates where language service text is used
+- Popup confirms language switch
 
-In `scan_screen.dart`, replace the `_simulateScan()` function:
+### Subscription plans
 
-```dart
-Future<void> _scanWithClaude(File imageFile) async {
-  setState(() => _state = ScanState.scanning);
-  
-  final bytes = await imageFile.readAsBytes();
-  final base64Image = base64Encode(bytes);
+- Free / Pro / Business options
+- Monthly prices are shown clearly for each plan
+- Toast or dialog appears when a plan is selected
 
-  final response = await http.post(
-    Uri.parse('https://api.anthropic.com/v1/messages'),
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': 'YOUR_API_KEY',
-      'anthropic-version': '2023-06-01',
-    },
-    body: jsonEncode({
-      'model': 'claude-opus-4-6',
-      'max_tokens': 1024,
-      'messages': [{
-        'role': 'user',
-        'content': [
-          {
-            'type': 'image',
-            'source': {
-              'type': 'base64',
-              'media_type': 'image/jpeg',
-              'data': base64Image,
-            },
-          },
-          {
-            'type': 'text',
-            'text': '''Extract from this receipt:
-            Return ONLY valid JSON: 
-            {"vendor":"","amount":0,"date":"","items":[],"category":"stock|rent|salary|transport|utilities|other"}
-            No preamble. No markdown. JSON only.''',
-          },
-        ],
-      }],
-    }),
-  );
+### Reports
 
-  final data = jsonDecode(response.body);
-  final text = data['content'][0]['text'];
-  final extracted = jsonDecode(text);
-  
-  // Update state with extracted data
-  setState(() {
-    _state = ScanState.result;
-    // populate _extracted map from extracted
-  });
-}
-```
+- Monthly financial summary
+- Shareable PDF export
+- Net profit / expense breakdown and tax estimate card
 
 ---
 
-## 💳 M-Pesa SMS Parser
+## Notes for MVP
 
-Parse Safaricom SMS messages automatically:
-
-```dart
-Map<String, dynamic>? parseMpesaSms(String sms) {
-  // Pattern: "TXN confirmed. Ksh1,200 sent to NAIVAS on 3/6/26..."
-  final amountRegex = RegExp(r'Ksh([\d,]+)');
-  final vendorRegex = RegExp(r'sent to ([A-Z\s]+) on');
-  final dateRegex = RegExp(r'on (\d+/\d+/\d+)');
-  
-  final amount = amountRegex.firstMatch(sms)?.group(1)?.replaceAll(',', '');
-  final vendor = vendorRegex.firstMatch(sms)?.group(1)?.trim();
-  final date = dateRegex.firstMatch(sms)?.group(1);
-  
-  if (amount == null) return null;
-  return {
-    'amount': double.parse(amount),
-    'vendor': vendor ?? 'M-Pesa Payment',
-    'date': date,
-    'isMpesa': true,
-  };
-}
-```
+- The app uses local persistence for settings, language, and subscription state
+- Supabase is initialized for backend auth/data support, but current screens focus on local flow
+- Theme and navigation were kept consistent with the original app style
+- New language and profile options were added without changing the app's visual identity
 
 ---
 
-## 📦 Next Steps
+## Next improvements
 
-- [ ] Connect Supabase (auth + database)
-- [ ] Wire Claude API vision for real receipt scanning
-- [ ] Implement M-Pesa Daraja STK Push for subscriptions
-- [ ] Add PDF report generation with `pdf` package
-- [ ] Offline-first with SQLite (`sqflite`)
-- [ ] Push notifications for daily summary
+- Connect live Supabase auth and profile sync
+- Hook actual receipt scanning to an OCR/AI backend
+- Add offline transactions storage and sync
+- Implement real M-Pesa payment integration
+- Add unit tests for services and screen flows
 
 ---
 
-**Biashara safi. Hesabu bila stress.** 🇰🇪
+## Why Suku?
+
+Suku is built to help East African micro-businesses track cash flow, save receipts, and make quick financial decisions with a clean mobile experience.
+
+**Biashara kwa urahisi. Hesabu kwa haraka.**

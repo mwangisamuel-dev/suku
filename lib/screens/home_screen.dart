@@ -75,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final summary = TransactionService.getSummary(transactions);
     if (!mounted) return;
     setState(() {
-      _businessName = prefs.getString('business_name') ?? 'Biashara yako';
+      _businessName = prefs.getString('business_name') ?? (LanguageService.isEnglish ? 'My Business' : 'Biashara yako');
       _transactions = transactions;
       _summary = summary;
       _loadingData = false;
@@ -90,35 +90,40 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: SukuColors.background,
-      body: _loadingData
-          ? const Center(child: CircularProgressIndicator(color: SukuColors.green))
-          : IndexedStack(
-              index: _navIndex,
-              children: [
-                _DashboardTab(
-                  summary: _summary,
-                  transactions: _transactions,
-                  cardAnim: _cardAnim,
-                  balanceVisible: _balanceVisible,
-                  onToggleBalance: () => setState(() => _balanceVisible = !_balanceVisible),
-                  businessName: _businessName,
-                  onRefresh: _loadData,
+    return ValueListenableBuilder<String>(
+      valueListenable: LanguageService.language,
+      builder: (context, language, child) {
+        return Scaffold(
+          backgroundColor: SukuColors.background,
+          body: _loadingData
+              ? const Center(child: CircularProgressIndicator(color: SukuColors.green))
+              : IndexedStack(
+                  index: _navIndex,
+                  children: [
+                    _DashboardTab(
+                      summary: _summary,
+                      transactions: _transactions,
+                      cardAnim: _cardAnim,
+                      balanceVisible: _balanceVisible,
+                      onToggleBalance: () => setState(() => _balanceVisible = !_balanceVisible),
+                      businessName: _businessName,
+                      onRefresh: _loadData,
+                    ),
+                    _TransactionsTab(
+                      transactions: _transactions,
+                      onRefresh: _loadData,
+                      hideAmount: !_balanceVisible,
+                    ),
+                    const SizedBox(),
+                    const ReportsScreen(),
+                    _SettingsTab(),
+                  ],
                 ),
-                _TransactionsTab(
-                  transactions: _transactions,
-                  onRefresh: _loadData,
-                  hideAmount: !_balanceVisible,
-                ),
-                const SizedBox(),
-                const ReportsScreen(),
-                _SettingsTab(),
-              ],
-            ),
-      floatingActionButton: _buildFAB(),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: _buildNavBar(),
+          floatingActionButton: _buildFAB(),
+          floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+          bottomNavigationBar: _buildNavBar(),
+        );
+      },
     );
   }
 
@@ -149,11 +154,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Widget _buildNavBar() {
     final items = [
-      {'icon': Icons.home_rounded, 'label': 'Home'},
-      {'icon': Icons.receipt_long_rounded, 'label': 'Transactions'},
+      {'icon': Icons.home_rounded, 'label': LanguageService.text('homeLabel')},
+      {'icon': Icons.receipt_long_rounded, 'label': LanguageService.text('transactionsLabel')},
       {'icon': Icons.add, 'label': ''},
-      {'icon': Icons.bar_chart_rounded, 'label': 'Reports'},
-      {'icon': Icons.person_rounded, 'label': 'Profile'},
+      {'icon': Icons.bar_chart_rounded, 'label': LanguageService.text('reportsLabel')},
+      {'icon': Icons.person_rounded, 'label': LanguageService.text('profileLabel')},
     ];
 
     return Container(
@@ -245,10 +250,10 @@ class _DashboardTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final now = DateTime.now();
     final greeting = now.hour < 12
-        ? 'Habari za asubuhi'
+        ? LanguageService.text('greetingMorning')
         : now.hour < 17
-            ? 'Habari za mchana'
-            : 'Habari za jioni';
+            ? LanguageService.text('greetingAfternoon')
+            : LanguageService.text('greetingEvening');
 
     return CustomScrollView(
       slivers: [
@@ -316,7 +321,7 @@ class _DashboardTab extends StatelessWidget {
                   children: [
                     QuickActionBtn(
                       icon: Icons.add_rounded,
-                      label: 'Add',
+                      label: LanguageService.text('addAction'),
                       onTap: () async {
                         final result = await Navigator.push(
                             context, MaterialPageRoute(builder: (_) => const AddTransactionScreen()));
@@ -326,7 +331,7 @@ class _DashboardTab extends StatelessWidget {
                     ),
                     QuickActionBtn(
                       icon: Icons.document_scanner_rounded,
-                      label: 'Scan',
+                      label: LanguageService.text('scanAction'),
                       onTap: () async {
                         final result =
                             await Navigator.push(context, MaterialPageRoute(builder: (_) => const ScanScreen()));
@@ -336,7 +341,7 @@ class _DashboardTab extends StatelessWidget {
                     ),
                     QuickActionBtn(
                       icon: Icons.sms_rounded,
-                      label: 'M-Pesa',
+                      label: LanguageService.text('mpesaAction'),
                       onTap: () async {
                         final result =
                             await Navigator.push(context, MaterialPageRoute(builder: (_) => const MpesaScreen()));
@@ -346,7 +351,7 @@ class _DashboardTab extends StatelessWidget {
                     ),
                     QuickActionBtn(
                       icon: Icons.picture_as_pdf_rounded,
-                      label: 'Report',
+                      label: LanguageService.text('reportAction'),
                       onTap: () {},
                       color: SukuColors.navy,
                     ),
@@ -390,13 +395,19 @@ class _DashboardTab extends StatelessWidget {
                   _WeeklyChart(transactions: transactions),
                   const SizedBox(height: 24),
                   if (summary.byCategory.isNotEmpty) ...[
-                    SectionHeader(title: 'Matumizi ya Mwezi', action: 'See all', onAction: () {}),
+                    SectionHeader(
+                        title: LanguageService.text('monthlySpending'),
+                        action: LanguageService.text('seeAll'),
+                        onAction: () {}),
                     const SizedBox(height: 14),
                     _CategoryBreakdown(summary: summary, balanceVisible: balanceVisible),
                     const SizedBox(height: 24),
                   ],
                 ],
-                SectionHeader(title: 'Miamala ya Hivi Karibuni', action: 'View all', onAction: () {}),
+                SectionHeader(
+                    title: LanguageService.text('recentTransactionsTitle'),
+                    action: LanguageService.text('viewAll'),
+                    onAction: () {}),
                 const SizedBox(height: 14),
               ],
             ),
@@ -421,11 +432,11 @@ class _DashboardTab extends StatelessWidget {
                             child: const Icon(Icons.receipt_long_rounded, size: 40, color: SukuColors.green),
                           ),
                           const SizedBox(height: 16),
-                          Text('Hakuna miamala bado',
+                          Text(LanguageService.text('noTransactionsTitle'),
                               style: GoogleFonts.plusJakartaSans(
                                   fontSize: 16, fontWeight: FontWeight.w700, color: SukuColors.textPrimary)),
                           const SizedBox(height: 6),
-                          Text('Tap + to add your first transaction',
+                          Text(LanguageService.text('noTransactionsSubtitle'),
                               style: GoogleFonts.plusJakartaSans(fontSize: 13, color: SukuColors.textSecondary)),
                         ],
                       ),

@@ -57,6 +57,94 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     );
   }
 
+  Future<void> _confirmPlanSelection(String plan) async {
+    if (plan == 'Free') {
+      await _savePlan(plan);
+      return;
+    }
+
+    final controller = TextEditingController();
+    String selectedMethod = 'mpesa';
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: Text(LanguageService.text('subscriptionPaymentTitle'),
+                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(LanguageService.text('choosePaymentMethod'),
+                      style: GoogleFonts.plusJakartaSans(fontSize: 14, color: SukuColors.textSecondary)),
+                  const SizedBox(height: 16),
+                  RadioListTile<String>(
+                    value: 'mpesa',
+                    groupValue: selectedMethod,
+                    title: Text(LanguageService.text('mpesaPinOption')),
+                    onChanged: (value) => setState(() => selectedMethod = value ?? 'mpesa'),
+                  ),
+                  RadioListTile<String>(
+                    value: 'card',
+                    groupValue: selectedMethod,
+                    title: Text(LanguageService.text('cardPaymentOption')),
+                    onChanged: (value) => setState(() => selectedMethod = value ?? 'card'),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: controller,
+                    decoration: InputDecoration(
+                      labelText: selectedMethod == 'mpesa'
+                          ? LanguageService.text('enterMpesaPin')
+                          : LanguageService.text('enterCardDetails'),
+                      border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(14))),
+                    ),
+                    obscureText: selectedMethod == 'mpesa',
+                    keyboardType: TextInputType.number,
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(LanguageService.text('cancelButton'),
+                      style: GoogleFonts.plusJakartaSans(color: SukuColors.textHint, fontWeight: FontWeight.w700)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: SukuColors.green,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+                  onPressed: () {
+                    if (controller.text.isEmpty) return;
+                    Navigator.pop(context);
+                    _processPayment(plan, selectedMethod);
+                  },
+                  child: Text(LanguageService.text('payButton'),
+                      style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _processPayment(String plan, String method) async {
+    setState(() => _saving = true);
+    await Future.delayed(const Duration(milliseconds: 700));
+    await _savePlan(plan);
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(LanguageService.text('paymentSuccess')),
+      duration: const Duration(seconds: 2),
+    ));
+  }
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<String>(
@@ -90,21 +178,21 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                     title: '${LanguageService.planName('Free')} — ${LanguageService.planPrice('Free')}',
                     subtitle: LanguageService.text('freePlanSubtitle'),
                     active: _selectedPlan == 'Free',
-                    onTap: () => _savePlan('Free'),
+                    onTap: () => _confirmPlanSelection('Free'),
                   ),
                   const SizedBox(height: 12),
                   _PlanTile(
                     title: '${LanguageService.planName('Pro')} — ${LanguageService.planPrice('Pro')}',
                     subtitle: LanguageService.text('proPlanSubtitle'),
                     active: _selectedPlan == 'Pro',
-                    onTap: () => _savePlan('Pro'),
+                    onTap: () => _confirmPlanSelection('Pro'),
                   ),
                   const SizedBox(height: 12),
                   _PlanTile(
                     title: '${LanguageService.planName('Business')} — ${LanguageService.planPrice('Business')}',
                     subtitle: LanguageService.text('businessPlanSubtitle'),
                     active: _selectedPlan == 'Business',
-                    onTap: () => _savePlan('Business'),
+                    onTap: () => _confirmPlanSelection('Business'),
                   ),
                   const SizedBox(height: 24),
                   Text('${LanguageService.text('currentPlan')}: ${LanguageService.planName(_selectedPlan)}',

@@ -17,6 +17,7 @@ import 'mpesa_screen.dart';
 import 'mpesa_settings_screen.dart';
 import 'notifications_screen.dart';
 import 'help_support_screen.dart';
+import 'subscription_screen.dart';
 import 'transaction_detail_screen.dart';
 import 'phone_screen.dart';
 import '../services/sms_service.dart';

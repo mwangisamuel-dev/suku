@@ -36,7 +36,8 @@ class PinService {
     try {
       final canCheck = await _localAuth.canCheckBiometrics;
       final isSupported = await _localAuth.isDeviceSupported();
-      return canCheck && isSupported;
+      final availableBiometrics = await _localAuth.getAvailableBiometrics();
+      return canCheck && isSupported && availableBiometrics.isNotEmpty;
     } catch (e) {
       return false;
     }

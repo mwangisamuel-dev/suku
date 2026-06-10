@@ -357,6 +357,8 @@ class _DashboardTab extends StatelessWidget {
                     ),
                   ],
                 ),
+                const SizedBox(height: 16),
+                _BusinessInsightsCard(summary: summary, transactions: transactions),
                 const SizedBox(height: 24),
               ],
             ),
@@ -759,6 +761,100 @@ class _BalanceCard extends StatelessWidget {
               ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BusinessInsightsCard extends StatelessWidget {
+  final MonthlySummary summary;
+  final List<Transaction> transactions;
+
+  const _BusinessInsightsCard({required this.summary, required this.transactions});
+
+  @override
+  Widget build(BuildContext context) {
+    final topExpense = summary.byCategory.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    final best = topExpense.isNotEmpty ? topExpense.first : null;
+    final daysInMonth = DateTime.now().day;
+    final averageExpense = daysInMonth > 0 ? summary.totalExpenses / daysInMonth : 0.0;
+    final receiptCount = transactions.where((t) {
+      final note = t.notes?.toLowerCase() ?? '';
+      return t.title.toLowerCase().contains('receipt') || note.contains('receipt');
+    }).length;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: SukuColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: SukuColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            LanguageService.text('businessInsightsTitle'),
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: SukuColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _InsightStat(
+                label: LanguageService.text('businessInsightsTopCategory'),
+                value: best != null
+                    ? '${best.key.label}\nKsh ${NumberFormat('#,##0').format(best.value)}'
+                    : LanguageService.text('topExpenseNone'),
+              ),
+              _InsightStat(
+                label: LanguageService.text('businessInsightsDailyAverage'),
+                value: 'Ksh ${NumberFormat('#,##0').format(averageExpense)}',
+              ),
+              _InsightStat(
+                label: LanguageService.text('businessInsightsReceipts'),
+                value: '$receiptCount',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InsightStat extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _InsightStat({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 10,
+                color: SukuColors.textSecondary,
+                fontWeight: FontWeight.w600,
+              )),
+          const SizedBox(height: 6),
+          Text(value,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: SukuColors.textPrimary,
+                height: 1.3,
+              )),
         ],
       ),
     );

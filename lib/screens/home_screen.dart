@@ -377,7 +377,7 @@ class _DashboardTab extends StatelessWidget {
                   children: [
                     Expanded(
                       child: StatCard(
-                        label: 'Money In',
+                        label: LanguageService.text('moneyIn'),
                         amount: balanceVisible ? summary.totalIncome : -1,
                         color: SukuColors.green,
                         icon: Icons.trending_up_rounded,
@@ -387,7 +387,7 @@ class _DashboardTab extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: StatCard(
-                        label: 'Money Out',
+                        label: LanguageService.text('moneyOut'),
                         amount: balanceVisible ? summary.totalExpenses : -1,
                         color: SukuColors.error,
                         icon: Icons.trending_down_rounded,
@@ -781,6 +781,8 @@ class _BusinessInsightsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final topExpense = summary.byCategory.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
     final best = topExpense.isNotEmpty ? topExpense.first : null;
+    final topCategoryPercent =
+        best != null && summary.totalExpenses > 0 ? ((best.value / summary.totalExpenses) * 100).round() : 0;
     final daysInMonth = DateTime.now().day;
     final averageExpense = daysInMonth > 0 ? summary.totalExpenses / daysInMonth : 0.0;
     final receiptCount = transactions.where((t) {
@@ -813,9 +815,8 @@ class _BusinessInsightsCard extends StatelessWidget {
             children: [
               _InsightStat(
                 label: LanguageService.text('businessInsightsTopCategory'),
-                value: best != null
-                    ? '${best.key.label}\nKsh ${NumberFormat('#,##0').format(best.value)}'
-                    : LanguageService.text('topExpenseNone'),
+                value:
+                    best != null ? '${best.key.label}\n$topCategoryPercent%' : LanguageService.text('topExpenseNone'),
               ),
               _InsightStat(
                 label: LanguageService.text('businessInsightsDailyAverage'),
@@ -1145,22 +1146,25 @@ class _TransactionsTabState extends State<_TransactionsTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Miamala Yote',
+                Text(LanguageService.text('allTransactions'),
                     style: GoogleFonts.plusJakartaSans(
                         fontSize: 24, fontWeight: FontWeight.w800, color: SukuColors.textPrimary, letterSpacing: -0.5)),
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    _FilterChip(label: 'Yote', active: _filter == null, onTap: () => setState(() => _filter = null)),
+                    _FilterChip(
+                        label: LanguageService.text('all'),
+                        active: _filter == null,
+                        onTap: () => setState(() => _filter = null)),
                     const SizedBox(width: 8),
                     _FilterChip(
-                        label: '↑ Money In',
+                        label: LanguageService.text('moneyInFilter'),
                         active: _filter == TransactionType.income,
                         color: SukuColors.green,
                         onTap: () => setState(() => _filter = TransactionType.income)),
                     const SizedBox(width: 8),
                     _FilterChip(
-                        label: '↓ Money Out',
+                        label: LanguageService.text('moneyOutFilter'),
                         active: _filter == TransactionType.expense,
                         color: SukuColors.error,
                         onTap: () => setState(() => _filter = TransactionType.expense)),
@@ -1187,7 +1191,7 @@ class _TransactionsTabState extends State<_TransactionsTab> {
                           child: const Icon(Icons.receipt_long_rounded, size: 40, color: SukuColors.green),
                         ),
                         const SizedBox(height: 16),
-                        Text('Hakuna miamala bado',
+                        Text(LanguageService.text('noTransactionsTitle'),
                             style: GoogleFonts.plusJakartaSans(
                                 fontSize: 16, fontWeight: FontWeight.w700, color: SukuColors.textPrimary)),
                         const SizedBox(height: 6),

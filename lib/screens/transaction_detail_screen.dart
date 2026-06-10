@@ -30,13 +30,14 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Delete transaction?', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
-        content: Text('This cannot be undone.',
+        title: Text(LanguageService.text('deleteTransactionTitle'),
+            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+        content: Text(LanguageService.text('deleteTransactionContent'),
             style: GoogleFonts.plusJakartaSans(fontSize: 14, color: SukuColors.textSecondary)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancel',
+            child: Text(LanguageService.text('cancelButton'),
                 style: GoogleFonts.plusJakartaSans(color: SukuColors.textSecondary, fontWeight: FontWeight.w600)),
           ),
           ElevatedButton(
@@ -45,7 +46,8 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                 backgroundColor: SukuColors.error,
                 elevation: 0,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-            child: Text('Delete', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: Colors.white)),
+            child: Text(LanguageService.text('deleteButton'),
+                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: Colors.white)),
           ),
         ],
       ),
@@ -63,7 +65,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Transaction deleted',
+        content: Text(LanguageService.text('transactionDeleted'),
             style: GoogleFonts.plusJakartaSans(color: Colors.white, fontWeight: FontWeight.w600)),
         backgroundColor: SukuColors.error,
         behavior: SnackBarBehavior.floating,
@@ -73,7 +75,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
       Navigator.pop(context, true);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Failed to delete. Try again.', style: GoogleFonts.plusJakartaSans(color: Colors.white)),
+        content: Text(LanguageService.text('failedDelete'), style: GoogleFonts.plusJakartaSans(color: Colors.white)),
         backgroundColor: SukuColors.error,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -101,6 +103,34 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content:
             Text(LanguageService.text('invoiceShareError'), style: GoogleFonts.plusJakartaSans(color: Colors.white)),
+        backgroundColor: SukuColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
+      ));
+    } finally {
+      if (mounted) setState(() => _sharing = false);
+    }
+  }
+
+  Future<void> _downloadInvoice() async {
+    setState(() => _sharing = true);
+    try {
+      final file = await PdfService.generateInvoice(transaction: widget.transaction);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('${LanguageService.text('invoiceSavedTo')} ${file.path}',
+            style: GoogleFonts.plusJakartaSans(color: Colors.white, fontWeight: FontWeight.w600)),
+        backgroundColor: SukuColors.green,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
+      ));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content:
+            Text(LanguageService.text('invoiceSaveError'), style: GoogleFonts.plusJakartaSans(color: Colors.white)),
         backgroundColor: SukuColors.error,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -189,7 +219,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                               ),
                               const SizedBox(width: 10),
                               Text(
-                                isIncome ? 'Money In' : 'Money Out',
+                                isIncome ? LanguageService.text('moneyIn') : LanguageService.text('moneyOut'),
                                 style: GoogleFonts.plusJakartaSans(
                                     fontSize: 13, fontWeight: FontWeight.w600, color: color),
                               ),
@@ -394,7 +424,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: _sharing ? null : _shareInvoice,
+                          onPressed: _sharing ? null : _downloadInvoice,
                           icon: _sharing
                               ? const SizedBox(
                                   width: 18,

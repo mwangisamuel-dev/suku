@@ -456,7 +456,7 @@ class _DashboardTransactionTile extends StatelessWidget {
   final bool visible;
   final VoidCallback? onTap;
 
-  const _DashboardTransactionTile({super.key, required this.transaction, required this.visible, this.onTap});
+  const _DashboardTransactionTile({required this.transaction, required this.visible, this.onTap});
 
   @override
   Widget build(BuildContext context) {

@@ -51,6 +51,7 @@ class PinService {
         options: const AuthenticationOptions(
           biometricOnly: true,
           stickyAuth: true,
+          useErrorDialogs: true,
         ),
       );
     } catch (e) {

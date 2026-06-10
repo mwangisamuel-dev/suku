@@ -62,7 +62,8 @@ class LanguageService {
       'businessAccount': 'Business Account',
       'personalAccount': 'Personal Account',
       'updateProfileDescriptionBusiness': 'Update your business name, location and category for reports and receipts.',
-      'updateProfileDescriptionPersonal': 'Update your personal profile, location and occupation for receipts and tracking.',
+      'updateProfileDescriptionPersonal':
+          'Update your personal profile, location and occupation for receipts and tracking.',
       'businessName': 'Business Name',
       'fullName': 'Full Name',
       'location': 'Location',

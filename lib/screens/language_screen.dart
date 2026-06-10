@@ -36,7 +36,8 @@ class _LanguageScreenState extends State<LanguageScreen> {
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(LanguageService.text('languageTitle'), style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+        title: Text(LanguageService.text('languageTitle'),
+            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
         content: Text(LanguageService.switchLanguageMessage(language),
             style: GoogleFonts.plusJakartaSans(fontSize: 14, color: SukuColors.textSecondary)),
         actions: [

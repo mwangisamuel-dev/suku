@@ -36,11 +36,9 @@ class AuthService {
   }
 
   // ── Email ─────────────────────────────────────────────────────
-  static Future<AuthResult> signInWithEmail(
-      String email, String password) async {
+  static Future<AuthResult> signInWithEmail(String email, String password) async {
     try {
-      final res = await _supabase.auth.signInWithPassword(
-          email: email, password: password);
+      final res = await _supabase.auth.signInWithPassword(email: email, password: password);
       if (res.user != null) return AuthResult.success();
       return AuthResult.error('Sign in failed. Please try again.');
     } on AuthException catch (e) {
@@ -50,11 +48,9 @@ class AuthService {
     }
   }
 
-  static Future<AuthResult> signUpWithEmail(
-      String email, String password) async {
+  static Future<AuthResult> signUpWithEmail(String email, String password) async {
     try {
-      final res = await _supabase.auth.signUp(
-          email: email, password: password);
+      final res = await _supabase.auth.signUp(email: email, password: password);
       if (res.user != null) return AuthResult.success();
       return AuthResult.error('Sign up failed. Please try again.');
     } on AuthException catch (e) {
@@ -191,6 +187,5 @@ class AuthResult {
   AuthResult._({required this.success, this.error});
 
   factory AuthResult.success() => AuthResult._(success: true);
-  factory AuthResult.error(String message) =>
-      AuthResult._(success: false, error: message);
+  factory AuthResult.error(String message) => AuthResult._(success: false, error: message);
 }

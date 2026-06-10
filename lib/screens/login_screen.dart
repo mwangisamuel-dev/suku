@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/suku_theme.dart';
 import '../services/auth_service.dart';
 import '../services/pin_service.dart';
 import 'otp_screen.dart';
-import 'home_screen.dart';
 import 'pin_lock_screen.dart';
 import 'pin_setup_screen.dart';
 import 'business_setup_screen.dart';
-import 'phone_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   final bool isLogin;
@@ -19,8 +16,7 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen>
-    with SingleTickerProviderStateMixin {
+class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
@@ -54,8 +50,7 @@ class _LoginScreenState extends State<LoginScreen>
     super.dispose();
   }
 
-  String get _fullPhone =>
-      '$_countryCode${_phoneCtrl.text.replaceAll(RegExp(r'^0+'), '')}';
+  String get _fullPhone => '$_countryCode${_phoneCtrl.text.replaceAll(RegExp(r'^0+'), '')}';
 
   Future<void> _sendPhoneOtp() async {
     if (_phoneCtrl.text.length < 9) return;
@@ -67,10 +62,7 @@ class _LoginScreenState extends State<LoginScreen>
     if (!mounted) return;
     setState(() => _loading = false);
     if (result.success) {
-      Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (_) => OtpScreen(phone: _fullPhone)));
+      Navigator.push(context, MaterialPageRoute(builder: (_) => OtpScreen(phone: _fullPhone)));
     } else {
       setState(() => _error = result.error);
     }
@@ -82,8 +74,7 @@ class _LoginScreenState extends State<LoginScreen>
       _loading = true;
       _error = null;
     });
-    final result = await AuthService.signInWithEmail(
-        _emailCtrl.text.trim(), _passwordCtrl.text);
+    final result = await AuthService.signInWithEmail(_emailCtrl.text.trim(), _passwordCtrl.text);
     if (!mounted) return;
     setState(() => _loading = false);
     if (result.success) {
@@ -99,8 +90,7 @@ class _LoginScreenState extends State<LoginScreen>
       _loading = true;
       _error = null;
     });
-    final result = await AuthService.signUpWithEmail(
-        _emailCtrl.text.trim(), _passwordCtrl.text);
+    final result = await AuthService.signUpWithEmail(_emailCtrl.text.trim(), _passwordCtrl.text);
     if (!mounted) return;
     setState(() => _loading = false);
     if (result.success) {
@@ -132,20 +122,11 @@ class _LoginScreenState extends State<LoginScreen>
 
     if (!profileComplete) {
       Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(
-              builder: (_) => const BusinessSetupScreen()),
-          (_) => false);
+          context, MaterialPageRoute(builder: (_) => const BusinessSetupScreen()), (_) => false);
     } else if (!pinSet) {
-      Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const PinSetupScreen()),
-          (_) => false);
+      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const PinSetupScreen()), (_) => false);
     } else {
-      Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const PinLockScreen()),
-          (_) => false);
+      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const PinLockScreen()), (_) => false);
     }
   }
 
@@ -167,13 +148,10 @@ class _LoginScreenState extends State<LoginScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Image.asset('assets/images/icon.png',
-                  width: 48, height: 48),
+              Image.asset('assets/images/icon.png', width: 48, height: 48),
               const SizedBox(height: 16),
               Text(
-                widget.isLogin
-                    ? 'Welcome back 👋'
-                    : 'Create your account',
+                widget.isLogin ? 'Welcome back 👋' : 'Create your account',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
@@ -183,11 +161,8 @@ class _LoginScreenState extends State<LoginScreen>
               ),
               const SizedBox(height: 6),
               Text(
-                widget.isLogin
-                    ? 'Sign in to continue to Suku'
-                    : 'Join thousands of businesses tracking smarter',
-                style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14, color: SukuColors.textSecondary),
+                widget.isLogin ? 'Sign in to continue to Suku' : 'Join thousands of businesses tracking smarter',
+                style: GoogleFonts.plusJakartaSans(fontSize: 14, color: SukuColors.textSecondary),
               ),
               const SizedBox(height: 28),
 
@@ -204,18 +179,13 @@ class _LoginScreenState extends State<LoginScreen>
                     color: SukuColors.surface,
                     borderRadius: BorderRadius.circular(10),
                     boxShadow: [
-                      BoxShadow(
-                          color: SukuColors.navy.withOpacity(0.08),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2))
+                      BoxShadow(color: SukuColors.navy.withOpacity(0.08), blurRadius: 8, offset: const Offset(0, 2))
                     ],
                   ),
                   indicatorSize: TabBarIndicatorSize.tab,
                   dividerColor: Colors.transparent,
-                  labelStyle: GoogleFonts.plusJakartaSans(
-                      fontSize: 13, fontWeight: FontWeight.w700),
-                  unselectedLabelStyle: GoogleFonts.plusJakartaSans(
-                      fontSize: 13, fontWeight: FontWeight.w500),
+                  labelStyle: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w700),
+                  unselectedLabelStyle: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w500),
                   labelColor: SukuColors.textPrimary,
                   unselectedLabelColor: SukuColors.textSecondary,
                   tabs: const [
@@ -234,19 +204,15 @@ class _LoginScreenState extends State<LoginScreen>
                   decoration: BoxDecoration(
                     color: SukuColors.error.withOpacity(0.08),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color: SukuColors.error.withOpacity(0.2)),
+                    border: Border.all(color: SukuColors.error.withOpacity(0.2)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.error_outline_rounded,
-                          size: 16, color: SukuColors.error),
+                      const Icon(Icons.error_outline_rounded, size: 16, color: SukuColors.error),
                       const SizedBox(width: 8),
                       Expanded(
-                          child: Text(_error!,
-                              style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 13,
-                                  color: SukuColors.error))),
+                          child:
+                              Text(_error!, style: GoogleFonts.plusJakartaSans(fontSize: 13, color: SukuColors.error))),
                     ],
                   ),
                 ),
@@ -264,6 +230,38 @@ class _LoginScreenState extends State<LoginScreen>
                   ],
                 ),
               ),
+              const SizedBox(height: 18),
+              Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      widget.isLogin ? 'Don\'t have an account?' : 'Already have an account?',
+                      style: GoogleFonts.plusJakartaSans(fontSize: 13, color: SukuColors.textSecondary),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => LoginScreen(isLogin: !widget.isLogin),
+                          ),
+                        );
+                      },
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        minimumSize: const Size(0, 0),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Text(
+                        widget.isLogin ? 'Sign up' : 'Log in',
+                        style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13, fontWeight: FontWeight.w700, color: SukuColors.green),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -276,10 +274,8 @@ class _LoginScreenState extends State<LoginScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Phone Number',
-            style: GoogleFonts.plusJakartaSans(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: SukuColors.textPrimary)),
+            style:
+                GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w600, color: SukuColors.textPrimary)),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
@@ -292,29 +288,22 @@ class _LoginScreenState extends State<LoginScreen>
               GestureDetector(
                 onTap: _showCountryPicker,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 16),
-                  decoration: BoxDecoration(
-                    border: Border(
-                        right: BorderSide(
-                            color: SukuColors.border, width: 1)),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                  decoration: const BoxDecoration(
+                    border: Border(right: BorderSide(color: SukuColors.border, width: 1)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        _countries.firstWhere(
-                            (c) => c['code'] == _countryCode)['flag']!,
+                        _countries.firstWhere((c) => c['code'] == _countryCode)['flag']!,
                         style: const TextStyle(fontSize: 18),
                       ),
                       const SizedBox(width: 4),
                       Text(_countryCode,
                           style: GoogleFonts.plusJakartaSans(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: SukuColors.textPrimary)),
-                      const Icon(Icons.keyboard_arrow_down_rounded,
-                          size: 16, color: SukuColors.textHint),
+                              fontSize: 14, fontWeight: FontWeight.w600, color: SukuColors.textPrimary)),
+                      const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: SukuColors.textHint),
                     ],
                   ),
                 ),
@@ -324,16 +313,12 @@ class _LoginScreenState extends State<LoginScreen>
                   controller: _phoneCtrl,
                   keyboardType: TextInputType.phone,
                   style: GoogleFonts.plusJakartaSans(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: SukuColors.textPrimary),
+                      fontSize: 16, fontWeight: FontWeight.w600, color: SukuColors.textPrimary),
                   decoration: InputDecoration(
                     hintText: '712 345 678',
-                    hintStyle: GoogleFonts.plusJakartaSans(
-                        color: SukuColors.textHint),
+                    hintStyle: GoogleFonts.plusJakartaSans(color: SukuColors.textHint),
                     border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 16),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
                   ),
                   onChanged: (_) => setState(() => _error = null),
                 ),
@@ -343,11 +328,8 @@ class _LoginScreenState extends State<LoginScreen>
         ),
         const SizedBox(height: 8),
         Text(
-          widget.isLogin
-              ? 'Enter your registered phone number'
-              : 'We\'ll send a 6-digit code to verify.',
-          style: GoogleFonts.plusJakartaSans(
-              fontSize: 12, color: SukuColors.textHint),
+          widget.isLogin ? 'Enter your registered phone number' : 'We\'ll send a 6-digit code to verify.',
+          style: GoogleFonts.plusJakartaSans(fontSize: 12, color: SukuColors.textHint),
         ),
         const SizedBox(height: 20),
         SizedBox(
@@ -359,19 +341,13 @@ class _LoginScreenState extends State<LoginScreen>
               backgroundColor: SukuColors.green,
               foregroundColor: Colors.white,
               elevation: 0,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             ),
             child: _loading
                 ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                        color: Colors.white, strokeWidth: 2.5))
-                : Text(
-                    widget.isLogin ? 'Send OTP' : 'Pata Code — Send OTP',
-                    style: GoogleFonts.plusJakartaSans(
-                        fontSize: 15, fontWeight: FontWeight.w700)),
+                    width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                : Text(widget.isLogin ? 'Send OTP' : 'Pata Code — Send OTP',
+                    style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w700)),
           ),
         ),
       ],
@@ -397,14 +373,11 @@ class _LoginScreenState extends State<LoginScreen>
           obscure: _obscurePassword,
           suffix: IconButton(
             icon: Icon(
-              _obscurePassword
-                  ? Icons.visibility_rounded
-                  : Icons.visibility_off_rounded,
+              _obscurePassword ? Icons.visibility_rounded : Icons.visibility_off_rounded,
               color: SukuColors.textHint,
               size: 20,
             ),
-            onPressed: () =>
-                setState(() => _obscurePassword = !_obscurePassword),
+            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
           ),
           onChanged: (_) => setState(() => _error = null),
         ),
@@ -419,18 +392,12 @@ class _LoginScreenState extends State<LoginScreen>
                 backgroundColor: SukuColors.green,
                 foregroundColor: Colors.white,
                 elevation: 0,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
               child: _loading
                   ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                          color: Colors.white, strokeWidth: 2.5))
-                  : Text('Sign In',
-                      style: GoogleFonts.plusJakartaSans(
-                          fontSize: 15, fontWeight: FontWeight.w700)),
+                      width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                  : Text('Sign In', style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w700)),
             ),
           ),
         ] else ...[
@@ -444,12 +411,9 @@ class _LoginScreenState extends State<LoginScreen>
                     style: OutlinedButton.styleFrom(
                       foregroundColor: SukuColors.navy,
                       side: const BorderSide(color: SukuColors.navy),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: Text('Sign In',
-                        style: GoogleFonts.plusJakartaSans(
-                            fontWeight: FontWeight.w700)),
+                    child: Text('Sign In', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
                   ),
                 ),
               ),
@@ -463,18 +427,14 @@ class _LoginScreenState extends State<LoginScreen>
                       backgroundColor: SukuColors.green,
                       foregroundColor: Colors.white,
                       elevation: 0,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     child: _loading
                         ? const SizedBox(
                             width: 18,
                             height: 18,
-                            child: CircularProgressIndicator(
-                                color: Colors.white, strokeWidth: 2))
-                        : Text('Sign Up',
-                            style: GoogleFonts.plusJakartaSans(
-                                fontWeight: FontWeight.w700)),
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        : Text('Sign Up', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
                   ),
                 ),
               ),
@@ -501,26 +461,20 @@ class _LoginScreenState extends State<LoginScreen>
               Container(
                 width: 56,
                 height: 56,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: SukuColors.surfaceAlt,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.account_circle_rounded,
-                    size: 32, color: SukuColors.textHint),
+                child: const Icon(Icons.account_circle_rounded, size: 32, color: SukuColors.textHint),
               ),
               const SizedBox(height: 14),
               Text(
-                widget.isLogin
-                    ? 'Sign in with Google'
-                    : 'Continue with Google',
-                style: GoogleFonts.plusJakartaSans(
-                    fontSize: 16, fontWeight: FontWeight.w700),
+                widget.isLogin ? 'Sign in with Google' : 'Continue with Google',
+                style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 6),
               Text('Quick and secure',
-                  style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13,
-                      color: SukuColors.textSecondary)),
+                  style: GoogleFonts.plusJakartaSans(fontSize: 13, color: SukuColors.textSecondary)),
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
@@ -529,24 +483,17 @@ class _LoginScreenState extends State<LoginScreen>
                   onPressed: _loading ? null : _googleSignIn,
                   icon: _loading
                       ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white))
+                          width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                       : const Icon(Icons.login_rounded),
                   label: Text(
-                    widget.isLogin
-                        ? 'Sign in with Google'
-                        : 'Continue with Google',
-                    style: GoogleFonts.plusJakartaSans(
-                        fontSize: 15, fontWeight: FontWeight.w700),
+                    widget.isLogin ? 'Sign in with Google' : 'Continue with Google',
+                    style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w700),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: SukuColors.navy,
                     foregroundColor: Colors.white,
                     elevation: 0,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
                 ),
               ),
@@ -564,8 +511,7 @@ class _LoginScreenState extends State<LoginScreen>
       builder: (_) => Container(
         decoration: const BoxDecoration(
           color: SukuColors.surface,
-          borderRadius:
-              BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
         child: Column(
@@ -574,30 +520,20 @@ class _LoginScreenState extends State<LoginScreen>
             Container(
               width: 36,
               height: 4,
-              decoration: BoxDecoration(
-                  color: SukuColors.border,
-                  borderRadius: BorderRadius.circular(2)),
+              decoration: BoxDecoration(color: SukuColors.border, borderRadius: BorderRadius.circular(2)),
             ),
             const SizedBox(height: 16),
-            Text('Select Country',
-                style: GoogleFonts.plusJakartaSans(
-                    fontSize: 16, fontWeight: FontWeight.w700)),
+            Text('Select Country', style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w700)),
             const SizedBox(height: 16),
             ..._countries.map((c) => ListTile(
-                  leading: Text(c['flag']!,
-                      style: const TextStyle(fontSize: 24)),
-                  title: Text(c['name']!,
-                      style: GoogleFonts.plusJakartaSans(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500)),
+                  leading: Text(c['flag']!, style: const TextStyle(fontSize: 24)),
+                  title:
+                      Text(c['name']!, style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w500)),
                   trailing: Text(c['code']!,
-                      style: GoogleFonts.plusJakartaSans(
-                          fontSize: 14,
-                          color: SukuColors.textSecondary)),
+                      style: GoogleFonts.plusJakartaSans(fontSize: 14, color: SukuColors.textSecondary)),
                   selected: _countryCode == c['code'],
                   selectedTileColor: SukuColors.greenSurface,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   onTap: () {
                     setState(() => _countryCode = c['code']!);
                     Navigator.pop(context);
@@ -635,41 +571,33 @@ class _InputField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: GoogleFonts.plusJakartaSans(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: SukuColors.textPrimary)),
+            style:
+                GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w600, color: SukuColors.textPrimary)),
         const SizedBox(height: 8),
         TextField(
           controller: controller,
           obscureText: obscure,
           keyboardType: keyboardType,
           onChanged: onChanged,
-          style: GoogleFonts.plusJakartaSans(
-              fontSize: 15, color: SukuColors.textPrimary),
+          style: GoogleFonts.plusJakartaSans(fontSize: 15, color: SukuColors.textPrimary),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: GoogleFonts.plusJakartaSans(
-                color: SukuColors.textHint),
+            hintStyle: GoogleFonts.plusJakartaSans(color: SukuColors.textHint),
             filled: true,
             fillColor: SukuColors.surface,
             suffixIcon: suffix,
-            contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide:
-                  const BorderSide(color: SukuColors.border),
+              borderSide: const BorderSide(color: SukuColors.border),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide:
-                  const BorderSide(color: SukuColors.border),
+              borderSide: const BorderSide(color: SukuColors.border),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(
-                  color: SukuColors.green, width: 1.5),
+              borderSide: const BorderSide(color: SukuColors.green, width: 1.5),
             ),
           ),
         ),

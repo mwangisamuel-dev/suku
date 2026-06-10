@@ -49,7 +49,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('OK', style: GoogleFonts.plusJakartaSans(color: SukuColors.green, fontWeight: FontWeight.w700)),
+            child: Text(LanguageService.text('okButton'),
+                style: GoogleFonts.plusJakartaSans(color: SukuColors.green, fontWeight: FontWeight.w700)),
           ),
         ],
       ),
@@ -111,7 +112,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                           fontSize: 14, fontWeight: FontWeight.w600, color: SukuColors.textPrimary)),
                   const SizedBox(height: 8),
                   Text(
-                    'Switching plans is saved locally and will be reflected across your app settings.',
+                    LanguageService.text('subscriptionSavedNotice'),
                     style: GoogleFonts.plusJakartaSans(fontSize: 13, color: SukuColors.textSecondary, height: 1.5),
                   ),
                   if (_saving) ...[

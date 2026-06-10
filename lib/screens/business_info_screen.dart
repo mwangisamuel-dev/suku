@@ -15,8 +15,7 @@ class BusinessInfoScreen extends StatefulWidget {
 class _BusinessInfoScreenState extends State<BusinessInfoScreen> {
   final _nameController = TextEditingController();
   final _locationController = TextEditingController();
-  final _occupationController = TextEditingController();
-  final String _accountType = 'business';
+  String _accountType = 'business';
   String? _selectedType;
   bool _loading = true;
   bool _saving = false;
@@ -28,6 +27,14 @@ class _BusinessInfoScreenState extends State<BusinessInfoScreen> {
     {'label': 'Fundi / Repairs', 'value': 'repairs'},
     {'label': 'Transport / Boda', 'value': 'transport'},
     {'label': 'Other / Freelance', 'value': 'other'},
+  ];
+
+  final _personalTypes = [
+    {'label': 'Worker / Employed', 'value': 'worker'},
+    {'label': 'Freelancer', 'value': 'freelancer'},
+    {'label': 'Student', 'value': 'student'},
+    {'label': 'Home-based', 'value': 'home'},
+    {'label': 'Other', 'value': 'other'},
   ];
 
   @override
@@ -46,10 +53,34 @@ class _BusinessInfoScreenState extends State<BusinessInfoScreen> {
   Future<void> _loadBusinessInfo() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _nameController.text = prefs.getString('business_name') ?? '';
-      _locationController.text = prefs.getString('location') ?? '';
-      _selectedType = prefs.getString('business_type') ?? 'other';
+      _accountType = prefs.getString('account_type') ?? 'business';
+      if (_accountType == 'personal') {
+        _nameController.text = prefs.getString('personal_name') ?? '';
+        _locationController.text = prefs.getString('personal_location') ?? '';
+        _selectedType = prefs.getString('occupation') ?? 'other';
+      } else {
+        _nameController.text = prefs.getString('business_name') ?? '';
+        _locationController.text = prefs.getString('location') ?? '';
+        _selectedType = prefs.getString('business_type') ?? 'other';
+      }
       _loading = false;
+    });
+  }
+
+  Future<void> _updateAccountType(String type) async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _accountType = type;
+      _selectedType = null;
+      if (_accountType == 'personal') {
+        _nameController.text = prefs.getString('personal_name') ?? '';
+        _locationController.text = prefs.getString('personal_location') ?? '';
+        _selectedType = prefs.getString('occupation') ?? 'other';
+      } else {
+        _nameController.text = prefs.getString('business_name') ?? '';
+        _locationController.text = prefs.getString('location') ?? '';
+        _selectedType = prefs.getString('business_type') ?? 'other';
+      }
     });
   }
 
@@ -62,20 +93,45 @@ class _BusinessInfoScreenState extends State<BusinessInfoScreen> {
   Future<void> _save() async {
     if (!_canSave) return;
     setState(() => _saving = true);
-    await AuthService.saveBusinessProfile(
-      businessName: _nameController.text.trim(),
-      location: _locationController.text.trim(),
-      businessType: _selectedType ?? 'other',
-    );
+    if (_accountType == 'personal') {
+      await AuthService.saveProfile(
+        accountType: 'personal',
+        personalName: _nameController.text.trim(),
+        personalLocation: _locationController.text.trim(),
+        occupation: _selectedType ?? 'other',
+      );
+    } else {
+      await AuthService.saveProfile(
+        accountType: 'business',
+        businessName: _nameController.text.trim(),
+        businessLocation: _locationController.text.trim(),
+        businessType: _selectedType ?? 'other',
+      );
+    }
     if (!mounted) return;
     setState(() => _saving = false);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('Business info saved', style: GoogleFonts.plusJakartaSans(color: Colors.white)),
-      backgroundColor: SukuColors.green,
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      margin: const EdgeInsets.all(16),
-    ));
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(_accountType == 'personal'
+            ? LanguageService.text('personalInfoTitle')
+            : LanguageService.text('businessInfoTitle')),
+        content: Text(
+          _accountType == 'personal'
+              ? LanguageService.text('personalProfileSaved')
+              : LanguageService.text('businessProfileSaved'),
+          style: GoogleFonts.plusJakartaSans(fontSize: 14, color: SukuColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(LanguageService.text('okButton'),
+                style: GoogleFonts.plusJakartaSans(color: SukuColors.green, fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -96,7 +152,10 @@ class _BusinessInfoScreenState extends State<BusinessInfoScreen> {
                         children: [
                           const BackButton(color: SukuColors.textPrimary),
                           const SizedBox(width: 8),
-                          Text('Business Info',
+                          Text(
+                              _accountType == 'personal'
+                                  ? LanguageService.text('personalInfoTitle')
+                                  : LanguageService.text('businessInfoTitle'),
                               style: GoogleFonts.plusJakartaSans(
                                   fontSize: 24,
                                   fontWeight: FontWeight.w800,
@@ -105,22 +164,65 @@ class _BusinessInfoScreenState extends State<BusinessInfoScreen> {
                         ],
                       ),
                       const SizedBox(height: 20),
-                      Text('Update your business name, location and category for reports and receipts.',
+                      Text(
+                          _accountType == 'personal'
+                              ? LanguageService.text('updateProfileDescriptionPersonal')
+                              : LanguageService.text('updateProfileDescriptionBusiness'),
                           style:
                               GoogleFonts.plusJakartaSans(fontSize: 14, color: SukuColors.textSecondary, height: 1.5)),
                       const SizedBox(height: 24),
-                      _buildField(label: 'Business Name', controller: _nameController, hint: 'e.g. Mama Kuku Shop'),
-                      const SizedBox(height: 14),
-                      _buildField(label: 'Location', controller: _locationController, hint: 'e.g. Nairobi, Kenya'),
-                      const SizedBox(height: 18),
-                      Text('Business Type',
+                      Text(LanguageService.text('accountType'),
                           style: GoogleFonts.plusJakartaSans(
                               fontSize: 14, fontWeight: FontWeight.w700, color: SukuColors.textPrimary)),
                       const SizedBox(height: 10),
                       Wrap(
                         spacing: 10,
                         runSpacing: 10,
-                        children: _businessTypes.map((type) {
+                        children: [
+                          {'label': LanguageService.text('businessAccount'), 'value': 'business'},
+                          {'label': LanguageService.text('personalAccount'), 'value': 'personal'},
+                        ].map((type) {
+                          final value = type['value']!;
+                          final selected = _accountType == value;
+                          return ChoiceChip(
+                            label: Text(type['label']!,
+                                style: GoogleFonts.plusJakartaSans(
+                                    color: selected ? Colors.white : SukuColors.textPrimary)),
+                            selected: selected,
+                            onSelected: (_) => setState(() {
+                              _accountType = value;
+                              _selectedType = null;
+                            }),
+                            selectedColor: SukuColors.green,
+                            backgroundColor: SukuColors.surface,
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 24),
+                      _buildField(
+                          label: _accountType == 'personal'
+                              ? LanguageService.text('fullName')
+                              : LanguageService.text('businessName'),
+                          controller: _nameController,
+                          hint: _accountType == 'personal' ? 'e.g. Jane Wanjiru' : 'e.g. Mama Kuku Shop'),
+                      const SizedBox(height: 14),
+                      _buildField(
+                          label: LanguageService.text('location'),
+                          controller: _locationController,
+                          hint: 'e.g. Nairobi, Kenya'),
+                      const SizedBox(height: 18),
+                      Text(
+                          _accountType == 'personal'
+                              ? LanguageService.text('occupation')
+                              : LanguageService.text('businessType'),
+                          style: GoogleFonts.plusJakartaSans(
+                              fontSize: 14, fontWeight: FontWeight.w700, color: SukuColors.textPrimary)),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: (_accountType == 'personal' ? _personalTypes : _businessTypes).map((type) {
                           final value = type['value']!;
                           final selected = _selectedType == value;
                           return ChoiceChip(
@@ -147,7 +249,10 @@ class _BusinessInfoScreenState extends State<BusinessInfoScreen> {
                           ),
                           child: _saving
                               ? const CircularProgressIndicator(color: Colors.white)
-                              : Text('Save business info',
+                              : Text(
+                                  _accountType == 'personal'
+                                      ? LanguageService.text('savePersonalInfo')
+                                      : LanguageService.text('saveBusinessInfo'),
                                   style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w700)),
                         ),
                       ),

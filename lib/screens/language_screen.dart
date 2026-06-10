@@ -43,7 +43,8 @@ class _LanguageScreenState extends State<LanguageScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('OK', style: GoogleFonts.plusJakartaSans(color: SukuColors.green, fontWeight: FontWeight.w700)),
+            child: Text(LanguageService.text('okButton'),
+                style: GoogleFonts.plusJakartaSans(color: SukuColors.green, fontWeight: FontWeight.w700)),
           ),
         ],
       ),

@@ -1280,7 +1280,7 @@ class _SettingsTabState extends State<_SettingsTab> {
                       await Navigator.push(context, MaterialPageRoute(builder: (_) => const HelpSupportScreen()));
                     }),
                 _SettingsRow(
-                  label: 'Sign Out',
+                  label: LanguageService.text('settingsSignOut'),
                   icon: Icons.logout_rounded,
                   color: SukuColors.error,
                   onTap: () async {
@@ -1288,13 +1288,14 @@ class _SettingsTabState extends State<_SettingsTab> {
                       context: context,
                       builder: (_) => AlertDialog(
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                        title: Text('Sign out?', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
-                        content: Text('You will need to verify your phone number again.',
+                        title: Text(LanguageService.text('signOutPrompt'),
+                            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+                        content: Text(LanguageService.text('signOutWarning'),
                             style: GoogleFonts.plusJakartaSans(fontSize: 14, color: SukuColors.textSecondary)),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context, false),
-                            child: Text('Cancel',
+                            child: Text(LanguageService.text('cancelButton'),
                                 style: GoogleFonts.plusJakartaSans(
                                     color: SukuColors.textSecondary, fontWeight: FontWeight.w600)),
                           ),
@@ -1304,7 +1305,7 @@ class _SettingsTabState extends State<_SettingsTab> {
                                 backgroundColor: SukuColors.error,
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-                            child: Text('Sign Out',
+                            child: Text(LanguageService.text('settingsSignOut'),
                                 style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: Colors.white)),
                           ),
                         ],

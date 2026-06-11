@@ -138,6 +138,8 @@ class BudgetGoal {
         'deadline': deadline.toIso8601String(),
       };
 
+      
+
   factory BudgetGoal.fromJson(Map<String, dynamic> json) => BudgetGoal(
         id: json['id'],
         title: json['title'],

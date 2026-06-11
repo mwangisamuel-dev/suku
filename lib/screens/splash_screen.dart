@@ -17,8 +17,7 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
-    with TickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMixin {
   late AnimationController _logoController;
   late AnimationController _textController;
   late AnimationController _taglineController;
@@ -37,31 +36,20 @@ class _SplashScreenState extends State<SplashScreen>
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
     ));
-    _bgController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 800));
-    _bgExpand =
-        CurvedAnimation(parent: _bgController, curve: Curves.easeOut);
-    _logoController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 900));
-    _logoScale = Tween<double>(begin: 0.3, end: 1.0).animate(
-        CurvedAnimation(
-            parent: _logoController, curve: Curves.elasticOut));
-    _logoOpacity = Tween<double>(begin: 0, end: 1).animate(
-        CurvedAnimation(
-            parent: _logoController,
-            curve: const Interval(0, 0.4)));
-    _textController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 600));
-    _textOpacity = Tween<double>(begin: 0, end: 1).animate(
-        CurvedAnimation(parent: _textController, curve: Curves.easeOut));
-    _textSlide =
-        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero)
-            .animate(CurvedAnimation(
-                parent: _textController, curve: Curves.easeOut));
-    _taglineController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 500));
-    _taglineOpacity = Tween<double>(begin: 0, end: 1)
-        .animate(_taglineController);
+    _bgController = AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
+    _bgExpand = CurvedAnimation(parent: _bgController, curve: Curves.easeOut);
+    _logoController = AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
+    _logoScale =
+        Tween<double>(begin: 0.3, end: 1.0).animate(CurvedAnimation(parent: _logoController, curve: Curves.elasticOut));
+    _logoOpacity = Tween<double>(begin: 0, end: 1)
+        .animate(CurvedAnimation(parent: _logoController, curve: const Interval(0, 0.4)));
+    _textController = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
+    _textOpacity =
+        Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(parent: _textController, curve: Curves.easeOut));
+    _textSlide = Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero)
+        .animate(CurvedAnimation(parent: _textController, curve: Curves.easeOut));
+    _taglineController = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
+    _taglineOpacity = Tween<double>(begin: 0, end: 1).animate(_taglineController);
     _runAnimations();
   }
 
@@ -79,9 +67,9 @@ class _SplashScreenState extends State<SplashScreen>
 
     Widget nextScreen;
     if (AuthService.isLoggedIn) {
+      await AuthService.loadProfileFromDatabase();
       final pinSet = await PinService.isPinSet();
-      nextScreen =
-          pinSet ? const PinLockScreen() : const PinSetupScreen();
+      nextScreen = pinSet ? const PinLockScreen() : const PinSetupScreen();
     } else {
       nextScreen = const WelcomeScreen();
     }
@@ -91,8 +79,7 @@ class _SplashScreenState extends State<SplashScreen>
       PageRouteBuilder(
         pageBuilder: (_, __, ___) => nextScreen,
         transitionDuration: const Duration(milliseconds: 600),
-        transitionsBuilder: (_, anim, __, child) =>
-            FadeTransition(opacity: anim, child: child),
+        transitionsBuilder: (_, anim, __, child) => FadeTransition(opacity: anim, child: child),
       ),
     );
   }
@@ -119,7 +106,7 @@ class _SplashScreenState extends State<SplashScreen>
               child: Container(
                 width: size.width * 2 * _bgExpand.value,
                 height: size.width * 2 * _bgExpand.value,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(colors: [
                     SukuColors.navyLight,
@@ -141,10 +128,7 @@ class _SplashScreenState extends State<SplashScreen>
                   height: 300,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: RadialGradient(colors: [
-                      SukuColors.green.withOpacity(0.6),
-                      Colors.transparent
-                    ]),
+                    gradient: RadialGradient(colors: [SukuColors.green.withOpacity(0.6), Colors.transparent]),
                   ),
                 ),
               ),
@@ -160,8 +144,7 @@ class _SplashScreenState extends State<SplashScreen>
                     opacity: _logoOpacity.value,
                     child: Transform.scale(
                       scale: _logoScale.value,
-                      child: Image.asset('assets/images/icon.png',
-                          width: 110, height: 110),
+                      child: Image.asset('assets/images/icon.png', width: 110, height: 110),
                     ),
                   ),
                 ),
@@ -190,11 +173,9 @@ class _SplashScreenState extends State<SplashScreen>
                   builder: (_, __) => Opacity(
                     opacity: _taglineOpacity.value,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 7),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
                       decoration: BoxDecoration(
-                        border: Border.all(
-                            color: SukuColors.green.withOpacity(0.4)),
+                        border: Border.all(color: SukuColors.green.withOpacity(0.4)),
                         borderRadius: BorderRadius.circular(20),
                         color: SukuColors.green.withOpacity(0.1),
                       ),

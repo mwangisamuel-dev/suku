@@ -26,7 +26,10 @@ class AuthService {
         token: token,
         type: OtpType.sms,
       );
-      if (res.user != null) return AuthResult.success();
+      if (res.user != null) {
+        await loadProfileFromDatabase();
+        return AuthResult.success();
+      }
       return AuthResult.error('Verification failed. Please try again.');
     } on AuthException catch (e) {
       return AuthResult.error(e.message);
@@ -35,11 +38,48 @@ class AuthService {
     }
   }
 
+  static Future<bool> loadProfileFromDatabase() async {
+    final user = currentUser;
+    if (user == null) return false;
+
+    try {
+      final response = await _supabase.from('profiles').select().eq('id', user.id).limit(1);
+
+      if (response.isNotEmpty) {
+        final row = Map<String, dynamic>.from(response.first as Map);
+        final prefs = await SharedPreferences.getInstance();
+        final accountType =
+            (row['account_type'] as String?) ?? (row['business_name'] != null ? 'business' : 'personal');
+
+        await prefs.setString('account_type', accountType);
+        await prefs.setBool('profile_complete', true);
+
+        if (accountType == 'business') {
+          await prefs.setString('business_name', row['business_name']?.toString() ?? 'My Business');
+          await prefs.setString('location', row['location']?.toString() ?? 'Nairobi, Kenya');
+          await prefs.setString('business_type', row['business_type']?.toString() ?? 'other');
+        } else {
+          await prefs.setString('personal_name', row['personal_name']?.toString() ?? 'My Account');
+          await prefs.setString('personal_location', row['personal_location']?.toString() ?? 'Nairobi, Kenya');
+          await prefs.setString('occupation', row['occupation']?.toString() ?? 'other');
+        }
+
+        return true;
+      }
+    } catch (e) {
+      // ignore database sync failures and keep current local state
+    }
+    return false;
+  }
+
   // ── Email ─────────────────────────────────────────────────────
   static Future<AuthResult> signInWithEmail(String email, String password) async {
     try {
       final res = await _supabase.auth.signInWithPassword(email: email, password: password);
-      if (res.user != null) return AuthResult.success();
+      if (res.user != null) {
+        await loadProfileFromDatabase();
+        return AuthResult.success();
+      }
       return AuthResult.error('Sign in failed. Please try again.');
     } on AuthException catch (e) {
       return AuthResult.error(e.message);
@@ -63,8 +103,12 @@ class AuthService {
   // ── Google ────────────────────────────────────────────────────
   static Future<AuthResult> signInWithGoogle() async {
     try {
-      await _supabase.auth.signInWithOAuth(OAuthProvider.google);
-      return AuthResult.success();
+      final res = await _supabase.auth.signInWithOAuth(OAuthProvider.google);
+      if (res.user != null) {
+        await loadProfileFromDatabase();
+        return AuthResult.success();
+      }
+      return AuthResult.error('Google sign in failed. Please try again.');
     } on AuthException catch (e) {
       return AuthResult.error(e.message);
     } catch (e) {
@@ -84,10 +128,12 @@ class AuthService {
         await _supabase.from('profiles').upsert({
           'id': user.id,
           'phone': user.phone,
+          'account_type': 'business',
           'business_name': businessName,
           'location': location,
           'business_type': businessType,
           'created_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
         });
       } catch (e) {
         // silently fail
@@ -122,10 +168,12 @@ class AuthService {
           await _supabase.from('profiles').upsert({
             'id': user.id,
             'phone': user.phone,
+            'account_type': 'business',
             'business_name': businessName,
             'location': businessLocation,
             'business_type': businessType,
             'created_at': DateTime.now().toIso8601String(),
+            'updated_at': DateTime.now().toIso8601String(),
           });
         } catch (e) {
           // silently fail
@@ -136,6 +184,23 @@ class AuthService {
       if (personalLocation != null) await prefs.setString('personal_location', personalLocation);
       if (occupation != null) await prefs.setString('occupation', occupation);
       await prefs.setBool('profile_complete', true);
+      final user = currentUser;
+      if (user != null) {
+        try {
+          await _supabase.from('profiles').upsert({
+            'id': user.id,
+            'phone': user.phone,
+            'account_type': 'personal',
+            'personal_name': personalName,
+            'personal_location': personalLocation,
+            'occupation': occupation,
+            'created_at': DateTime.now().toIso8601String(),
+            'updated_at': DateTime.now().toIso8601String(),
+          });
+        } catch (e) {
+          // silently fail
+        }
+      }
     }
   }
 

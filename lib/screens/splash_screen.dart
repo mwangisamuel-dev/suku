@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/suku_theme.dart';
 import '../services/auth_service.dart';
 import '../services/pin_service.dart';
 import 'welcome_screen.dart';
 import 'pin_lock_screen.dart';
 import 'pin_setup_screen.dart';
-import 'home_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

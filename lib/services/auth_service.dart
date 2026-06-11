@@ -103,12 +103,9 @@ class AuthService {
   // ── Google ────────────────────────────────────────────────────
   static Future<AuthResult> signInWithGoogle() async {
     try {
-      final res = await _supabase.auth.signInWithOAuth(OAuthProvider.google);
-      if (res.user != null) {
-        await loadProfileFromDatabase();
-        return AuthResult.success();
-      }
-      return AuthResult.error('Google sign in failed. Please try again.');
+      await _supabase.auth.signInWithOAuth(OAuthProvider.google);
+      await loadProfileFromDatabase();
+      return AuthResult.success();
     } on AuthException catch (e) {
       return AuthResult.error(e.message);
     } catch (e) {

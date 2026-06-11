@@ -225,8 +225,7 @@ class SmsService {
         filter: SmsFilter.where(SmsColumn.ADDRESS).equals('MPESA'),
         sortOrder: [OrderBy(SmsColumn.DATE, sort: Sort.DESC)],
       );
-      final allMessages = messages ?? [];
-      return allMessages.where((sms) => _isMpesaSms(sms.body ?? '')).toList();
+      return messages.where((sms) => _isMpesaSms(sms.body ?? '')).toList();
     } catch (e) {
       return [];
     }

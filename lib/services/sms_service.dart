@@ -27,7 +27,12 @@ void backgroundMessageHandler(SmsMessage message) async {
 
 bool _isMpesaSms(String sms) {
   final lower = sms.toLowerCase();
-  return lower.contains('m-pesa') || lower.contains('mpesa') || (lower.contains('confirmed') && lower.contains('ksh'));
+  return lower.contains('m-pesa') ||
+      lower.contains('mpesa') ||
+      lower.contains('fuliza') ||
+      lower.contains('airtime') ||
+      lower.contains('bundle') ||
+      ((lower.contains('confirmed') || lower.contains('transaction')) && lower.contains('ksh'));
 }
 
 class SmsService {
@@ -136,44 +141,62 @@ class SmsService {
     if (!_isMpesaSms(sms)) return null;
 
     // Amount — find first Ksh amount
-    final amountRegex = RegExp(r'Ksh([\d,]+(?:\.\d{2})?)');
+    final amountRegex = RegExp(r'Ksh\s*([\d,]+(?:\.\d{2})?)', caseSensitive: false);
     final amountMatch = amountRegex.firstMatch(sms);
     if (amountMatch == null) return null;
 
     final amount = double.tryParse(amountMatch.group(1)!.replaceAll(',', '')) ?? 0;
     if (amount <= 0) return null;
 
-    // Type
-    final isIncome = sms.toLowerCase().contains('received') || sms.toLowerCase().contains('you have received');
+    final lower = sms.toLowerCase();
+    final isIncome = lower.contains('received') ||
+        lower.contains('you have received') ||
+        lower.contains('money in') ||
+        lower.contains('deposit');
 
-    // Vendor
     String vendor = 'M-Pesa Transaction';
-    if (isIncome) {
-      final fromRegex = RegExp(r'from ([A-Z][A-Z\s]+?) (?:\d|on)');
-      final m = fromRegex.firstMatch(sms);
-      if (m != null) vendor = m.group(1)!.trim();
-    } else {
-      final toRegex = RegExp(r'(?:sent to|paid to) ([A-Z][A-Z\s]+?) (?:on|via|\d)');
-      final m = toRegex.firstMatch(sms);
-      if (m != null) vendor = m.group(1)!.trim();
+    if (lower.contains('fuliza')) {
+      vendor = 'Fuliza';
+    } else if (lower.contains('airtime')) {
+      vendor = 'Airtime';
+    } else if (lower.contains('bundle') || lower.contains('data bundle')) {
+      vendor = 'Data Bundle';
     }
 
-    // Category
-    final lower = sms.toLowerCase();
+    if (isIncome) {
+      final fromRegex =
+          RegExp(r'from\s+([A-Z][A-Z0-9&\-\s\.]+?)(?:\s+\d{2}|\s+on\b|\s+via\b|\.|$)', caseSensitive: false);
+      final match = fromRegex.firstMatch(sms);
+      if (match != null) {
+        vendor = match.group(1)!.trim();
+      }
+    } else {
+      final toRegex = RegExp(
+          r'(?:sent to|paid to|paid for|bought|purchased|withdrawn from|withdrawn|withdrawal from|to)\s+([A-Z][A-Z0-9&\-\s\.]+?)(?:\s+on\b|\s+via\b|\.|$)',
+          caseSensitive: false);
+      final match = toRegex.firstMatch(sms);
+      if (match != null) {
+        vendor = match.group(1)!.trim();
+      }
+    }
+
     ExpenseCategory cat = ExpenseCategory.other;
     if (lower.contains('kplc') ||
         lower.contains('kenya power') ||
-        lower.contains('safaricom') ||
-        lower.contains('water') ||
-        lower.contains('electricity')) {
+        lower.contains('nairobi water') ||
+        lower.contains('water bill') ||
+        lower.contains('electricity') ||
+        lower.contains('utilities')) {
       cat = ExpenseCategory.utilities;
     } else if (lower.contains('naivas') ||
         lower.contains('quickmart') ||
         lower.contains('carrefour') ||
         lower.contains('wholesale') ||
-        lower.contains('supermarket')) {
+        lower.contains('supermarket') ||
+        lower.contains('shop') ||
+        lower.contains('store')) {
       cat = ExpenseCategory.stock;
-    } else if (lower.contains('rent') || lower.contains('kodi')) {
+    } else if (lower.contains('rent') || lower.contains('kodi') || lower.contains('house')) {
       cat = ExpenseCategory.rent;
     } else if (lower.contains('salary') || lower.contains('wages') || lower.contains('mshahara')) {
       cat = ExpenseCategory.salary;
@@ -181,7 +204,8 @@ class SmsService {
         lower.contains('fuel') ||
         lower.contains('matatu') ||
         lower.contains('uber') ||
-        lower.contains('bolt')) {
+        lower.contains('bolt') ||
+        lower.contains('transport')) {
       cat = ExpenseCategory.transport;
     }
 
@@ -196,15 +220,13 @@ class SmsService {
   // ── Read existing M-Pesa SMS from inbox ───────────────────────
   static Future<List<SmsMessage>> getRecentMpesaSms() async {
     try {
-      final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
-      final timestamp = (thirtyDaysAgo.millisecondsSinceEpoch ~/ 1000).toString();
-
       final messages = await _telephony.getInboxSms(
         columns: [SmsColumn.ADDRESS, SmsColumn.BODY, SmsColumn.DATE],
-        filter: SmsFilter.where(SmsColumn.ADDRESS).equals('MPESA').and(SmsColumn.DATE).greaterThan(timestamp),
+        filter: SmsFilter.where(SmsColumn.ADDRESS).equals('MPESA'),
         sortOrder: [OrderBy(SmsColumn.DATE, sort: Sort.DESC)],
       );
-      return messages ?? [];
+      final allMessages = messages ?? [];
+      return allMessages.where((sms) => _isMpesaSms(sms.body ?? '')).toList();
     } catch (e) {
       return [];
     }

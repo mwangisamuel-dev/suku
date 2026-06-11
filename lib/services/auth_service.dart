@@ -137,6 +137,7 @@ class AuthService {
       }
     }
     final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('account_type', 'business');
     await prefs.setString('business_name', businessName);
     await prefs.setString('location', location);
     await prefs.setString('business_type', businessType);

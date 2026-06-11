@@ -51,6 +51,7 @@ class _BusinessInfoScreenState extends State<BusinessInfoScreen> {
   }
 
   Future<void> _loadBusinessInfo() async {
+    await AuthService.loadProfileFromDatabase();
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _accountType = prefs.getString('account_type') ?? 'business';

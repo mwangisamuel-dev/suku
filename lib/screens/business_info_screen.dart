@@ -19,6 +19,7 @@ class _BusinessInfoScreenState extends State<BusinessInfoScreen> {
   String? _selectedType;
   bool _loading = true;
   bool _saving = false;
+  final bool _refreshing = false;
 
   final _businessTypes = [
     {'label': 'Duka / Shop', 'value': 'shop'},

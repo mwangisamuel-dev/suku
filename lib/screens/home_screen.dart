@@ -25,6 +25,7 @@ import 'transaction_detail_screen.dart';
 import 'phone_screen.dart';
 import '../services/sms_service.dart';
 import 'reports_screen.dart';
+import 'team_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

@@ -1376,6 +1376,13 @@ class _SettingsTabState extends State<_SettingsTab> {
                       _load();
                     }),
                 _SettingsRow(
+                    label: 'Team',
+                    icon: Icons.group_rounded,
+                    color: SukuColors.green,
+                    onTap: () async {
+                      await Navigator.push(context, MaterialPageRoute(builder: (_) => const TeamScreen()));
+                    }),
+                _SettingsRow(
                     label: LanguageService.text('settingsNotifications'),
                     icon: Icons.notifications_rounded,
                     color: SukuColors.info,
